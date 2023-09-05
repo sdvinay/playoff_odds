@@ -31,7 +31,7 @@ def h2h_standings(games, teams):
 #       tie_breakers[tm_key] = standings.index.values
 #   return tie_breakers[tm_key]
 def break_tie(teams):
-    return random.sample(teams, len(teams))
+    return random.sample(list(teams), len(teams))
 
 
 # Merge in league structure, and compute playoff seeding
