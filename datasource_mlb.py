@@ -31,8 +31,14 @@ def get_games_impl():
 
 def get_ratings_impl():
     teams_resp = requests.get(TEAMS_URL, params | {'hydrate': 'standings'}).json()
-    teams_df = pd.json_normalize(teams_resp['teams'])
-    ratings = teams_df.set_index('abbreviation')['record.winningPercentage'].rename('rating').astype(float)
+    teams_df = pd.json_normalize(teams_resp['teams']).set_index('abbreviation')
+    g = teams_df['record.leagueRecord.wins'] + teams_df['record.leagueRecord.losses']
+    regressed_wpct = (teams_df['record.leagueRecord.wins'] + 35) / (g+70)
+    # Go from regressed wpct to ELO
+    # ELO scales at 706*proj_wpct
+    # We'll center it at 1500, so add 1150
+    elo = regressed_wpct*706+1150
+    ratings = elo.rename('rating')
     return ratings
 
 
