@@ -5,7 +5,7 @@ import typer
 import pandas as pd
 import numpy as np
 import series_probs_compute as probs
-import datasource_538 as ds
+import datasource_mlb as ds
 import random
 import sim_utils
 
