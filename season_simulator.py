@@ -7,6 +7,7 @@ import numpy as np
 import series_probs_compute as probs
 import datasource_mlb as ds
 import random
+import tiebreakers
 import sim_utils
 
 #tie_breakers = {}
@@ -17,7 +18,11 @@ import sim_utils
 #       tie_breakers[tm_key] = standings.index.values
 #   return tie_breakers[tm_key]
 def break_tie(teams):
-    return random.sample(list(teams), len(teams))
+    tms = tuple(sorted(teams))
+    if tms in tiebreakers.clinched_tie_breakers:
+        winner = tiebreakers.clinched_tie_breakers[tms]
+        return [winner] + [tm for tm in tms if tm != winner]
+    return random.sample(tms, len(teams))
 
 
 # Merge in league structure, and compute playoff seeding
@@ -123,7 +128,7 @@ def add_variation_to_ratings(ratings):
     offsets = (-100, 100, 0, 0)
     return ratings + np.random.choice(offsets, len(ratings))
 
-def main(num_seasons: int = 100, save_output: bool = False, save_summary: bool = True, save_ranks: bool = True, id: int = 0, show_summary: bool = True, vary_ratings: bool = False):
+def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = True, save_ranks: bool = True, id: int = 0, show_summary: bool = True, vary_ratings: bool = False):
     print(f'Simulating {num_seasons} seasons as ID {id}')
     (played, remain) = ds.get_games()
     cur_standings = sim_utils.compute_standings(played)
