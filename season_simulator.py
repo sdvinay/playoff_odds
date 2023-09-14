@@ -84,10 +84,9 @@ def sim_n_seasons(games, n):
     gms['iter'] = np.concatenate([np.repeat(i, len(games)) for i in range(n)])
 
     rands = np.random.rand(len(gms))
-    gm_results = np.where(rands<gms['win_prob'], (gms['team1'], gms['team2'], gms['iter']), (gms['team2'], gms['team1'], gms['iter']))
-    results = pd.DataFrame(gm_results).T
-    results.columns = ['W', 'L', 'iter']
-    return results
+    gms['W'] = np.where(rands<gms['win_prob'], gms['team1'], gms['team2'])
+    gms['L'] = np.where(rands>gms['win_prob'], gms['team1'], gms['team2'])
+    return gms[['W', 'L', 'iter']]
 
 def get_tm_ranks(standings):
     tms_by_rank = standings[['lg', 'lg_rank']].reset_index().set_index(['run_id', 'lg', 'lg_rank'])['team'].unstack(level='lg_rank')
