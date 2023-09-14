@@ -12,7 +12,8 @@ def summarize_sim_results(df_results):
     wins = df_results.groupby('team')['W'].agg(['mean', 'max', 'min'])
     summary = pd.merge(left=wins, right=counts, on='team', how='left')
     for col in counts.columns:
-        summary[col] = summary[col].fillna(0).astype(int)    
+        summary[col] = summary[col].fillna(0).astype(int)
+    return summary
 
 
 def augment_summary(summary, tms_by_rank):
