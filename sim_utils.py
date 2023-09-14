@@ -17,7 +17,10 @@ def h2h_standings(games, teams):
 
 
 def compute_standings_from_results(sim_results, incoming_standings):
-    standings = pd.concat([sim_results.groupby('iter')[col].value_counts().rename(col) for col in ('W', 'L')], axis=1)
+    W = sim_results.groupby(['iter', 'W'])['W'].count()
+    L = sim_results.groupby(['iter', 'L'])['L'].count()
+    standings = pd.concat([W, L], axis=1)
+
     standings.index.names = ['iter', 'team']
     for col in standings.columns:
         standings[col] = standings[col].fillna(0).astype(int)
