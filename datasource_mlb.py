@@ -8,12 +8,11 @@ params = {'sportId': 1, 'season': 2023}
 def get_games_impl():
     # Get the MLB schedule from the MLB stats API
     schedule_data = requests.get(SCHEDULE_URL, params | {'hydrate': 'team'}).json()
-    all_gms = pd.json_normalize(schedule_data['dates'], record_path=['games']).set_index('gamePk')
+    all_gms = pd.json_normalize(schedule_data['dates'], record_path=['games'])
     reg = all_gms.query('gameType=="R"')
 
     # Remove the stubs of games that were rescheduled or suspended
-    remove = pd.concat([reg['resumeDate'].dropna(), reg['rescheduleDate'].dropna()]).index
-    reg = reg[~reg.index.isin(remove)]
+    reg = reg.loc[reg.fillna(0).query('resumeDate==0 and rescheduleDate==0').index]
 
     # Split out the games that have been played vs those remaining
     played_col_mapper = {'teams.home.team.abbreviation': 'team1', 'teams.away.team.abbreviation': 'team2', 
