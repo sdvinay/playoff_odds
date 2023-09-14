@@ -25,3 +25,9 @@ def find_all_clinched_tie_breakers():
     return clinched_tie_breakers
 
 clinched_tie_breakers = find_all_clinched_tie_breakers()
+clinched_tie_breakers[('SEA', 'TOR')] = 'SEA'
+clinched_tie_breakers[('BOS', 'SEA')] = 'SEA'
+clinched_tie_breakers[('BAL', 'TEX')] = 'BAL'
+clinched_tie_breakers[('CIN', 'MIA')] = 'MIA'
+clinched_tie_breakers[('MIA', 'SF')] = 'SF'
+
