@@ -25,9 +25,7 @@ def compute_standings_from_results(sim_results, incoming_standings):
     for col in standings.columns:
         standings[col] = standings[col].fillna(0).astype(int)
 
-    iters = standings.reset_index()['iter'].unique()
-    stds_iterated = pd.concat([incoming_standings] * len(iters))
-    stds_iterated['iter'] = np.concatenate([np.repeat(i, len(incoming_standings)) for i in iters])
-    stds_iterated = stds_iterated.reset_index().set_index(['iter', 'team'])
-    full_standings = stds_iterated + standings
+    incoming_standings['iter'] = 0
+    full_standings = incoming_standings.reset_index().set_index('team') + standings.reset_index().set_index('team')
+
     return full_standings
