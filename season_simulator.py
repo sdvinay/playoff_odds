@@ -144,14 +144,22 @@ def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = 
     standings['job_id'] = id
     standings = process_sim_results(standings.reset_index())
 
+    def create_dir_if_needed(path):
+        if not os.path.exists (path):
+            os.makedirs(path)
+
     if save_output:
+        create_dir_if_needed('output/standings')
+        create_dir_if_needed('output/games')
         standings.reset_index().to_feather(f'output/standings/{id}.feather')
         sim_results.reset_index().to_feather(f'output/games/{id}.feather')
     if save_summary:
+        create_dir_if_needed('output/summaries')
         summary = summarize_results(standings)
         summary.reset_index().to_feather(f'output/summaries/{id}.feather')
 
     if save_ranks:
+        create_dir_if_needed('output/ranks')
         tms_by_rank = get_tm_ranks(standings)
         tms_by_rank.reset_index().to_feather(f'output/ranks/{id}.feather')
 
