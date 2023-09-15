@@ -4,6 +4,7 @@ import pandas as pd
 import typer
 import random
 import shutil
+import os
 
 import season_simulator as sim
 import summarize_results as sr
@@ -65,7 +66,7 @@ def parallel_driver(num_jobs: int, vary_ratings: bool):
 
 
 def main(num_jobs: int = 100, vary_ratings: bool = True, clear_output: bool = True):
-    if clear_output:
+    if clear_output and os.path.exists('output'):
         shutil.rmtree('output')
 
     parallel_driver(num_jobs, vary_ratings)
