@@ -3,6 +3,7 @@ import time
 import pandas as pd
 import typer
 import random
+import shutil
 
 import season_simulator as sim
 import summarize_results as sr
@@ -63,7 +64,10 @@ def parallel_driver(num_jobs: int, vary_ratings: bool):
             print(f'Job {f.result()} completed')
 
 
-def main(num_jobs: int = 100, vary_ratings: bool = True):
+def main(num_jobs: int = 100, vary_ratings: bool = True, clear_output: bool = True):
+    if clear_output:
+        shutil.rmtree('output')
+
     parallel_driver(num_jobs, vary_ratings)
     summarize_data()
 
