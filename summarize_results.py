@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import season_simulator as sim
 import playoff_simulator as psim
-import datasource_538 as ds
 
 
 # Count the number of div/wc/playoff appearances by team from a set of results
