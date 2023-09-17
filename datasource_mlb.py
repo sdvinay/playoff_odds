@@ -60,6 +60,13 @@ def get_ratings_from_cache():
     ratings = pd.read_feather('mlbapi_cache/ratings.feather').set_index('team')['rating']
     return ratings
 
+def rebuild_cache():
+    played, remain = get_games_impl()
+
+    played.reset_index(drop=True).to_feather('mlbapi_cache/cur.feather')
+    remain.reset_index(drop=True).to_feather('mlbapi_cache/remain.feather')
+    get_ratings_impl().reset_index().to_feather('mlbapi_cache/ratings.feather')
+
 (cur, remain) = get_games_from_cache()
 ratings = get_ratings_from_cache()
 
