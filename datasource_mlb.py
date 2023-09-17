@@ -51,9 +51,17 @@ def get_ratings_impl():
     ratings.index.name = 'team'
     return ratings
 
+def get_games_from_cache():
+    played = pd.read_feather('mlbapi_cache/cur.feather')
+    remain = pd.read_feather('mlbapi_cache/remain.feather')
+    return (played, remain)
 
-(cur, remain) = get_games_impl()
-ratings = get_ratings_impl()
+def get_ratings_from_cache():
+    ratings = pd.read_feather('mlbapi_cache/ratings.feather').set_index('team')['rating']
+    return ratings
+
+(cur, remain) = get_games_from_cache()
+ratings = get_ratings_from_cache()
 
 def get_games():
     return (cur, remain)
