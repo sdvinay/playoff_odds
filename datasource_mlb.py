@@ -61,11 +61,12 @@ def get_ratings_from_cache():
     return ratings
 
 def rebuild_cache():
-    played, remain = get_games_impl()
+    cur, remain = get_games_impl()
+    ratings = get_ratings_impl()
 
-    played.reset_index(drop=True).to_feather('mlbapi_cache/cur.feather')
+    cur.reset_index(drop=True).to_feather('mlbapi_cache/cur.feather')
     remain.reset_index(drop=True).to_feather('mlbapi_cache/remain.feather')
-    get_ratings_impl().reset_index().to_feather('mlbapi_cache/ratings.feather')
+    ratings.reset_index().to_feather('mlbapi_cache/ratings.feather')
 
 (cur, remain) = get_games_from_cache()
 ratings = get_ratings_from_cache()
