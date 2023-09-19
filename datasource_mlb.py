@@ -5,6 +5,8 @@ SCHEDULE_URL = 'https://statsapi.mlb.com/api/v1/schedule'
 TEAMS_URL = 'https://statsapi.mlb.com/api/v1/teams'
 params = {'sportId': 1, 'season': 2023}
 
+__CACHE_DIR = 'mlbapi_cache'
+
 def get_games_impl():
     # Get the MLB schedule from the MLB stats API
     schedule_data = requests.get(SCHEDULE_URL, params | {'hydrate': 'team'}).json()
@@ -53,11 +55,11 @@ def get_ratings_impl():
 
 
 def __read_table_from_cache(filename_prefix, index_col):
-    return pd.read_feather(f'mlbapi_cache/{filename_prefix}.feather').set_index(index_col)
+    return pd.read_feather(f'{__CACHE_DIR}/{filename_prefix}.feather').set_index(index_col)
 
 
 def __write_table_to_cache(df, filename_prefix):
-    df.reset_index().to_feather(f'mlbapi_cache/{filename_prefix}.feather')
+    df.reset_index().to_feather(f'{__CACHE_DIR}/{filename_prefix}.feather')
 
 def get_games_from_cache():
     played = __read_table_from_cache('cur', 'gamePk')
