@@ -80,12 +80,12 @@ def __get_ratings_from_cache():
     return ratings
 
 def rebuild_cache():
-    cur, remain = __get_games_impl()
-    ratings = __get_ratings_impl()
+    __internal_cache.cur, __internal_cache.remain = __get_games_impl()
+    __internal_cache.ratings = __get_ratings_impl()
 
-    __write_table_to_cache(cur, 'cur')
-    __write_table_to_cache(remain, 'remain')
-    __write_table_to_cache(ratings, 'ratings')
+    __write_table_to_cache(__internal_cache.cur, 'cur')
+    __write_table_to_cache(__internal_cache.remain, 'remain')
+    __write_table_to_cache(__internal_cache.ratings, 'ratings')
 
 (__internal_cache.cur, __internal_cache.remain) = __get_games_from_cache()
 __internal_cache.ratings = __get_ratings_from_cache()
