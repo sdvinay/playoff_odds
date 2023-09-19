@@ -51,22 +51,30 @@ def get_ratings_impl():
     ratings.index.name = 'team'
     return ratings
 
+
+def __read_table_from_cache(filename_prefix, index_col):
+    return pd.read_feather(f'mlbapi_cache/{filename_prefix}.feather').set_index(index_col)
+
+
+def __write_table_to_cache(df, filename_prefix):
+    df.reset_index().to_feather(f'mlbapi_cache/{filename_prefix}.feather')
+
 def get_games_from_cache():
-    played = pd.read_feather('mlbapi_cache/cur.feather').set_index('gamePk')
-    remain = pd.read_feather('mlbapi_cache/remain.feather').set_index('gamePk')
+    played = __read_table_from_cache('cur', 'gamePk')
+    remain = __read_table_from_cache('remain', 'gamePk')
     return (played, remain)
 
 def get_ratings_from_cache():
-    ratings = pd.read_feather('mlbapi_cache/ratings.feather').set_index('team')['rating']
+    ratings = __read_table_from_cache('ratings', 'team')['rating']
     return ratings
 
 def rebuild_cache():
     cur, remain = get_games_impl()
     ratings = get_ratings_impl()
 
-    cur.reset_index().to_feather('mlbapi_cache/cur.feather')
-    remain.reset_index().to_feather('mlbapi_cache/remain.feather')
-    ratings.reset_index().to_feather('mlbapi_cache/ratings.feather')
+    __write_table_to_cache(cur, 'cur')
+    __write_table_to_cache(remain, 'remain')
+    __write_table_to_cache(ratings, 'ratings')
 
 (cur, remain) = get_games_from_cache()
 ratings = get_ratings_from_cache()
