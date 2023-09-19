@@ -8,7 +8,7 @@ params = {'sportId': 1, 'season': 2023}
 def get_games_impl():
     # Get the MLB schedule from the MLB stats API
     schedule_data = requests.get(SCHEDULE_URL, params | {'hydrate': 'team'}).json()
-    all_gms = pd.json_normalize(schedule_data['dates'], record_path=['games'])
+    all_gms = pd.json_normalize(schedule_data['dates'], record_path=['games']).set_index('gamePk')
     reg = all_gms.query('gameType=="R"')
 
     # Remove the stubs of games that were rescheduled or suspended
@@ -52,8 +52,8 @@ def get_ratings_impl():
     return ratings
 
 def get_games_from_cache():
-    played = pd.read_feather('mlbapi_cache/cur.feather')
-    remain = pd.read_feather('mlbapi_cache/remain.feather')
+    played = pd.read_feather('mlbapi_cache/cur.feather').set_index('gamePk')
+    remain = pd.read_feather('mlbapi_cache/remain.feather').set_index('gamePk')
     return (played, remain)
 
 def get_ratings_from_cache():
@@ -64,8 +64,8 @@ def rebuild_cache():
     cur, remain = get_games_impl()
     ratings = get_ratings_impl()
 
-    cur.reset_index(drop=True).to_feather('mlbapi_cache/cur.feather')
-    remain.reset_index(drop=True).to_feather('mlbapi_cache/remain.feather')
+    cur.reset_index().to_feather('mlbapi_cache/cur.feather')
+    remain.reset_index().to_feather('mlbapi_cache/remain.feather')
     ratings.reset_index().to_feather('mlbapi_cache/ratings.feather')
 
 (cur, remain) = get_games_from_cache()
