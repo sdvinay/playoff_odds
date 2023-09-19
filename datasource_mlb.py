@@ -1,11 +1,20 @@
 import pandas as pd
 import requests
+from dataclasses import dataclass
 
 SCHEDULE_URL = 'https://statsapi.mlb.com/api/v1/schedule'
 TEAMS_URL = 'https://statsapi.mlb.com/api/v1/teams'
 params = {'sportId': 1, 'season': 2023}
 
 __CACHE_DIR = 'mlbapi_cache'
+
+@dataclass
+class __internal_cache_struct:
+    cur: pd.DataFrame
+    remain: pd.DataFrame
+    ratings: pd.Series
+
+__internal_cache = __internal_cache_struct(None, None, None)
 
 def __get_games_impl():
     # Get the MLB schedule from the MLB stats API
@@ -78,14 +87,14 @@ def rebuild_cache():
     __write_table_to_cache(remain, 'remain')
     __write_table_to_cache(ratings, 'ratings')
 
-(cur, remain) = __get_games_from_cache()
-ratings = __get_ratings_from_cache()
+(__internal_cache.cur, __internal_cache.remain) = __get_games_from_cache()
+__internal_cache.ratings = __get_ratings_from_cache()
 
 def get_games():
-    return (cur, remain)
+    return (__internal_cache.cur, __internal_cache.remain)
 
 def get_ratings():
-    return ratings
+    return __internal_cache.ratings
 
 
 # This is the source data for the mapping of teams to divisions/leagues
