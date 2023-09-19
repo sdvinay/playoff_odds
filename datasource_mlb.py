@@ -7,7 +7,7 @@ params = {'sportId': 1, 'season': 2023}
 
 __CACHE_DIR = 'mlbapi_cache'
 
-def get_games_impl():
+def __get_games_impl():
     # Get the MLB schedule from the MLB stats API
     schedule_data = requests.get(SCHEDULE_URL, params | {'hydrate': 'team'}).json()
     all_gms = pd.json_normalize(schedule_data['dates'], record_path=['games'])
@@ -35,7 +35,7 @@ def get_games_impl():
 # For compatibility with the rest of the system, return ratings on the ELO scale
 # by converting regressed w% to ELO (based on research I've done in
 # elo_vs_wpct.ipynb)
-def get_ratings_impl():
+def __get_ratings_impl():
     teams_resp = requests.get(TEAMS_URL, params | {'hydrate': 'standings'}).json()
     records = pd.json_normalize(teams_resp['teams'], 
                             record_path=['record', 'records', 'expectedRecords'], 
@@ -61,25 +61,25 @@ def __read_table_from_cache(filename_prefix, index_col):
 def __write_table_to_cache(df, filename_prefix):
     df.reset_index().to_feather(f'{__CACHE_DIR}/{filename_prefix}.feather')
 
-def get_games_from_cache():
+def __get_games_from_cache():
     played = __read_table_from_cache('cur', 'gamePk')
     remain = __read_table_from_cache('remain', 'gamePk')
     return (played, remain)
 
-def get_ratings_from_cache():
+def __get_ratings_from_cache():
     ratings = __read_table_from_cache('ratings', 'team')['rating']
     return ratings
 
 def rebuild_cache():
-    cur, remain = get_games_impl()
-    ratings = get_ratings_impl()
+    cur, remain = __get_games_impl()
+    ratings = __get_ratings_impl()
 
     __write_table_to_cache(cur, 'cur')
     __write_table_to_cache(remain, 'remain')
     __write_table_to_cache(ratings, 'ratings')
 
-(cur, remain) = get_games_from_cache()
-ratings = get_ratings_from_cache()
+(cur, remain) = __get_games_from_cache()
+ratings = __get_ratings_from_cache()
 
 def get_games():
     return (cur, remain)
@@ -89,7 +89,7 @@ def get_ratings():
 
 
 # This is the source data for the mapping of teams to divisions/leagues
-def get_league_structure_impl():
+def __get_league_structure_impl():
     div_text = '''
     NLW: AZ COL LAD SD SF
     NLE: ATL MIA NYM PHI WSH
@@ -107,4 +107,4 @@ def get_league_structure_impl():
     teams['lg'] = teams['div'].str[0]
     return teams
 
-league_structure = get_league_structure_impl()
+league_structure = __get_league_structure_impl()
