@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 from dataclasses import dataclass
 import warnings
+import os
 
 SCHEDULE_URL = 'https://statsapi.mlb.com/api/v1/schedule'
 TEAMS_URL = 'https://statsapi.mlb.com/api/v1/teams'
@@ -74,6 +75,8 @@ def __read_table_from_cache(filename_prefix, index_col):
 
 
 def __write_table_to_cache(df, filename_prefix):
+    if not os.path.exists (__CACHE_DIR):
+        os.makedirs(__CACHE_DIR)
     df.reset_index().to_feather(f'{__CACHE_DIR}/{filename_prefix}.feather')
 
 def __get_games_from_cache():
