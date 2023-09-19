@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 from dataclasses import dataclass
+import warnings
 
 SCHEDULE_URL = 'https://statsapi.mlb.com/api/v1/schedule'
 TEAMS_URL = 'https://statsapi.mlb.com/api/v1/teams'
@@ -64,7 +65,12 @@ def __get_ratings_impl():
 
 
 def __read_table_from_cache(filename_prefix, index_col):
-    return pd.read_feather(f'{__CACHE_DIR}/{filename_prefix}.feather').set_index(index_col)
+    try:
+        df = pd.read_feather(f'{__CACHE_DIR}/{filename_prefix}.feather').set_index(index_col)
+    except FileNotFoundError:
+        warnings.warn("mlbapi_cache files missing; run datasource_mlb::rebuild_cache() to rebuild", Warning)
+        df = None
+    return df
 
 
 def __write_table_to_cache(df, filename_prefix):
@@ -76,8 +82,11 @@ def __get_games_from_cache():
     return (played, remain)
 
 def __get_ratings_from_cache():
-    ratings = __read_table_from_cache('ratings', 'team')['rating']
-    return ratings
+    ratings_df = __read_table_from_cache('ratings', 'team')
+    if ratings_df is not None:
+        return ratings_df['rating']
+    else:
+        return None
 
 def rebuild_cache():
     __internal_cache.cur, __internal_cache.remain = __get_games_impl()
