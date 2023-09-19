@@ -31,8 +31,7 @@ def sim_seasons(num_seasons: int, id: int, vary_ratings: bool):
 
 
 @print_perf_counter
-def get_job_size_distribution():
-    num_seasons_on_avg = 1000
+def get_job_size_distribution(num_seasons_on_avg):
     num_steps = 9
     step_size = int(num_seasons_on_avg/num_steps)
     one_way_range = int((num_steps-1)/2)*step_size
@@ -52,8 +51,8 @@ def summarize_data():
 
 
 @print_perf_counter
-def parallel_driver(num_jobs: int, vary_ratings: bool):
-    num_seasons_distribution = get_job_size_distribution()
+def parallel_driver(num_jobs: int, num_seasons_per_job: int, vary_ratings: bool):
+    num_seasons_distribution = get_job_size_distribution(num_seasons_per_job)
     with concurrent.futures.ProcessPoolExecutor() as executor:
         def submit_job(id):
             num_seasons = num_seasons_distribution[id%len(num_seasons_distribution)]
@@ -65,11 +64,11 @@ def parallel_driver(num_jobs: int, vary_ratings: bool):
             print(f'Job {f.result()} completed')
 
 
-def main(num_jobs: int = 100, vary_ratings: bool = True, clear_output: bool = True):
+def main(num_jobs: int = 100, num_seasons_per_job: int = 1000, vary_ratings: bool = True, clear_output: bool = True):
     if clear_output and os.path.exists('output'):
         shutil.rmtree('output')
 
-    parallel_driver(num_jobs, vary_ratings)
+    parallel_driver(num_jobs, num_seasons_per_job, vary_ratings)
     summarize_data()
 
 
