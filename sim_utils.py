@@ -29,3 +29,7 @@ def compute_standings_from_results(sim_results, incoming_standings):
     full_standings = incoming_standings.reset_index().set_index('team') + standings.reset_index().set_index('team')
 
     return full_standings
+
+def add_run_ids(df):
+    df['run_id'] = df['job_id'].astype(int)*10000 + df['iter']
+    return df

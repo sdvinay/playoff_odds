@@ -27,7 +27,7 @@ def break_tie(teams):
 
 # Merge in league structure, and compute playoff seeding
 def process_sim_results(sim_results):
-    sim_results['run_id'] = sim_results['job_id'].astype(int)*10000 + sim_results['iter']
+    sim_results = sim_utils.add_run_ids(sim_results)
     sim_results['wpct'] = sim_results['W'] / (sim_results['W'] + sim_results['L'])
 
     # Merge in the div/lg data
