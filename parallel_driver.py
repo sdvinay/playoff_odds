@@ -8,6 +8,7 @@ import os
 
 import season_simulator as sim
 import summarize_results as sr
+import sim_output
 
 
 def print_perf_counter(func):
@@ -45,8 +46,8 @@ def get_job_size_distribution(num_seasons_on_avg):
 
 @print_perf_counter
 def summarize_data():
-    summary = sim.gather_summaries()
-    tms_by_rank = sim.gather_ranks()
+    summary = sim_output.gather_summaries()
+    tms_by_rank = sim_output.gather_ranks()
     print(sr.augment_summary(summary, tms_by_rank).to_string())
 
 

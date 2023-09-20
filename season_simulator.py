@@ -1,6 +1,5 @@
 # Functions that implement the logic for monte carlo playoff odds
 
-import os
 import typer
 import pandas as pd
 import numpy as np
@@ -9,8 +8,8 @@ import datasource_mlb as ds
 import random
 import tiebreakers
 import sim_utils
+import sim_output
 
-OUTPUT_BASEDIR = 'output'
 
 #tie_breakers = {}
 #def break_tie(teams):
@@ -100,32 +99,10 @@ def get_tm_ranks(standings):
     return tms_by_rank.rename(columns={i: f'r{i}' for i in range(100)})
 
 
-def gather_output(dir_name, index_flds):
-    output_dir = f'{OUTPUT_BASEDIR}/{dir_name}'
-    df = pd.concat([pd.read_feather(f'{output_dir}/{filename}') for filename in os.listdir(output_dir)], axis=0)
-    if index_flds:
-        df = df.set_index(index_flds)
-    return df
-
-
-def gather_results():
-    return gather_output('standings', ['run_id', 'team'])
-
-
-def gather_ranks():
-    return gather_output('ranks', ['run_id', 'lg'])
-
 def get_ratings(games):
     ratings = games[['team1', 'rating1_pre']].drop_duplicates().set_index('team1')['rating1_pre']
     return ratings.rename('rating').sort_values(ascending=False)
 
-
-def gather_summaries():
-    summaries = gather_output('summaries', None)
-    summary = summaries.groupby('team').sum()
-    summary['max'] = summaries.groupby('team')['max'].max()
-    summary['min'] = summaries.groupby('team')['min'].min()
-    return summary
 
 def compute_probs(gms, ratings):
     rating1 = pd.merge(left=gms, right=ratings, left_on='team1', right_index=True, how='left')['rating']
@@ -135,13 +112,6 @@ def compute_probs(gms, ratings):
 def add_variation_to_ratings(ratings):
     offsets = (-100, 100, 0, 0)
     return ratings + np.random.choice(offsets, len(ratings))
-
-def write_output(df, dir_name):
-    output_dir = f'{OUTPUT_BASEDIR}/{dir_name}'
-    if not os.path.exists (output_dir):
-        os.makedirs(output_dir)
-    df.reset_index().to_feather(f'{output_dir}/{id}.feather')
-
 
 def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = True, save_ranks: bool = True, id: int = 0, show_summary: bool = True, vary_ratings: bool = False):
     print(f'Simulating {num_seasons} seasons as ID {id}')
@@ -160,15 +130,15 @@ def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = 
     standings = process_sim_results(standings.reset_index())
 
     if save_output:
-        write_output(standings, 'standings')
-        write_output(sim_results, 'games')
+        sim_output.write_output(standings, 'standings', id)
+        sim_output.write_output(sim_results, 'games', id)
     if save_summary:
         summary = summarize_results(standings)
-        write_output(summary, 'summaries')
+        sim_output.write_output(summary, 'summaries', id)
 
     if save_ranks:
         tms_by_rank = get_tm_ranks(standings)
-        write_output(tms_by_rank, 'ranks')
+        sim_output.write_output(tms_by_rank, 'ranks', id)
 
 if __name__ == "__main__":
     typer.run(main) 
