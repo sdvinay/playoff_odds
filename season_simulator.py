@@ -99,15 +99,21 @@ def get_tm_ranks(standings):
     tms_by_rank = standings[['lg', 'lg_rank']].reset_index().set_index(['run_id', 'lg', 'lg_rank'])['team'].unstack(level='lg_rank')
     return tms_by_rank.rename(columns={i: f'r{i}' for i in range(100)})
 
+
+def gather_output(dir_name, index_flds):
+    output_dir = f'{OUTPUT_BASEDIR}/{dir_name}'
+    df = pd.concat([pd.read_feather(f'{output_dir}/{filename}') for filename in os.listdir(output_dir)], axis=0)
+    if index_flds:
+        df = df.set_index(index_flds)
+    return df
+
+
 def gather_results():
-    sim_results = pd.concat([pd.read_feather(f'output/standings/{filename}') for filename in os.listdir('output/standings/')], axis=0)
-    sim_results = sim_results.set_index(['run_id', 'team'])
-    return sim_results
+    return gather_output('standings', ['run_id', 'team'])
+
 
 def gather_ranks():
-    ranks = pd.concat([pd.read_feather(f'output/ranks/{filename}') for filename in os.listdir('output/ranks/')], axis=0)
-    ranks = ranks.set_index(['run_id', 'lg'])
-    return ranks
+    return gather_output('ranks', ['run_id', 'lg'])
 
 def get_ratings(games):
     ratings = games[['team1', 'rating1_pre']].drop_duplicates().set_index('team1')['rating1_pre']
@@ -115,7 +121,7 @@ def get_ratings(games):
 
 
 def gather_summaries():
-    summaries = pd.concat([pd.read_feather(f'output/summaries/{filename}') for filename in os.listdir('output/summaries/')], axis=0)
+    summaries = gather_output('summaries', None)
     summary = summaries.groupby('team').sum()
     summary['max'] = summaries.groupby('team')['max'].max()
     summary['min'] = summaries.groupby('team')['min'].min()
