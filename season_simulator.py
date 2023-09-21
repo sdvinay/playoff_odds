@@ -124,6 +124,7 @@ def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = 
 
     sim_results = sim_n_seasons(remain, num_seasons)
     sim_results['job_id'] = id
+    sim_results = sim_utils.add_run_ids(sim_results)
 
     standings = sim_utils.compute_standings_from_results(sim_results, cur_standings)
     standings['job_id'] = id
