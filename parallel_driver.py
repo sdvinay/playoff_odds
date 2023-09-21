@@ -5,6 +5,7 @@ import typer
 import random
 import shutil
 import os
+from typing import List
 
 import season_simulator as sim
 import summarize_results as sr
@@ -31,8 +32,13 @@ def sim_seasons(num_seasons: int, id: int, vary_ratings: bool):
     return id
 
 
+# We want the jobs to be of varying size, to stagger their start/end times
+# This returns a distribution of 10 job sizes, ranging from roughly .5 to 1.5
+# times num_seasons_on_avg
+# The first number in the distribution is always num_seasons_on_avg,
+# so running one job will work properly (along with every multiple of 10)
 @print_perf_counter
-def get_job_size_distribution(num_seasons_on_avg):
+def get_job_size_distribution(num_seasons_on_avg: int) -> List[int]:
     num_steps = 9
     step_size = int(num_seasons_on_avg/num_steps)
     one_way_range = int((num_steps-1)/2)*step_size
