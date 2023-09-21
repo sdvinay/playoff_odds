@@ -56,37 +56,39 @@ def summarize_results(standings):
 
 
 
-def add_division_winners(sim_results):
-    sim_results['div_win'] = False
+def add_division_winners(standings):
+    standings['div_win'] = False
 
-    div_leading_wpct = sim_results.groupby(['run_id', 'div'])['wpct'].transform(max)
-    potential_div_winners = sim_results.query('wpct == @div_leading_wpct')
+    div_leading_wpct = standings.groupby(['run_id', 'div'])['wpct'].transform(max)
+    potential_div_winners = standings.query('wpct == @div_leading_wpct')
     tied_team_ct = potential_div_winners.reset_index()[['run_id', 'div']].value_counts().rename("tied_teams")
     potential_div_winners = pd.merge(left=potential_div_winners.reset_index(), right=tied_team_ct, on=['run_id', 'div']).set_index(['run_id', 'team'])
     # outright division winners
     outright_div_winners = potential_div_winners.query('tied_teams==1').index
-    sim_results.loc[outright_div_winners, 'div_win'] = True
+    standings.loc[outright_div_winners, 'div_win'] = True
     # ties
     tied_teams = potential_div_winners.query('tied_teams>1').reset_index()
     if len(tied_teams)>0:
         tied_sets = tied_teams.groupby(['run_id', 'div'])['team'].apply(set)
         tie_winners = tied_sets.apply(lambda tms: break_tie(tms)[0]).reset_index().set_index(['run_id', 'team']).index
-        sim_results.loc[tie_winners, 'div_win'] = True
-    return sim_results
+        standings.loc[tie_winners, 'div_win'] = True
+    return standings
 
 
-def add_lg_ranks(sim_results):
-    sim_results['tiebreak'] = 0
-    tied_tm_ct = sim_results.groupby(['run_id', 'lg', 'wpct'])['wpct'].transform('size')
+def add_lg_ranks(standings):
+    tied_tm_ct = standings.groupby(['run_id', 'lg', 'wpct'])['wpct'].transform('size')
     if sum(tied_tm_ct) > 0:
-        tied_sets = sim_results[tied_tm_ct>1].reset_index().groupby(['run_id', 'lg', 'wpct'])['team'].apply(set)
+        tied_sets = standings[tied_tm_ct>1].reset_index().groupby(['run_id', 'lg', 'wpct'])['team'].apply(set)
         tie_orders = tied_sets.apply(lambda tms: break_tie(tms)).explode()
+        # We need to take tie-orders (which are ordered lists) and convert them into a number we can use for sorting
         tiebreak = (15 - tie_orders.groupby(['run_id', 'lg', 'wpct']).cumcount())
-        sim_results['tiebreak'] = pd.concat([tie_orders, tiebreak], axis=1).reset_index().set_index(['run_id', 'team'])[0]
-        sim_results['lg_rank'] = sim_results.sort_values(by=['div_win', 'wpct', 'tiebreak'], ascending=False).groupby(['run_id', 'lg']).cumcount()+1
+        standings['tiebreak'] = pd.concat([tie_orders, tiebreak], axis=1).reset_index().set_index(['run_id', 'team'])[0]
+        standings['tiebreak'].fillna(0, inplace=True)
     else:
-        sim_results['lg_rank'] = sim_results.sort_values(by=['div_win', 'wpct'], ascending=False).groupby(['run_id', 'lg']).cumcount()+1
-    return sim_results
+        standings['tiebreak'] = 0
+
+    standings['lg_rank'] = standings.sort_values(by=['div_win', 'wpct', 'tiebreak'], ascending=False).groupby(['run_id', 'lg']).cumcount()+1
+    return standings
 
 
 
