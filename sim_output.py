@@ -33,3 +33,6 @@ def gather_summaries():
     summary['max'] = summaries.groupby('team')['max'].max()
     summary['min'] = summaries.groupby('team')['min'].min()
     return summary
+
+def gather_games():
+    return gather_output('games', ['run_id', 'gamePk'])
