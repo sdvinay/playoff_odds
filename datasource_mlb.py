@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import requests
 from dataclasses import dataclass
 import warnings
@@ -34,6 +35,9 @@ def __get_games_impl():
     played = played[played_col_mapper.keys()].rename(columns=played_col_mapper)
     for col in ['score1', 'score2']:
         played[col] = played[col].astype(int)
+    played['margin'] = played['score1']-played['score2']
+    played['W'] = np.where(played['margin']>0, played['team1'], played['team2'])
+    played['L']  = np.where(played['margin']<0, played['team1'], played['team2'])
 
     remain_cols = {'teams.home.team.abbreviation': 'team1', 'teams.away.team.abbreviation': 'team2'}
     remain = reg[~reg.index.isin(played.index)][remain_cols.keys()].rename(columns=remain_cols)
