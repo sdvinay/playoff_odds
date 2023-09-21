@@ -44,7 +44,6 @@ def get_job_size_distribution(num_seasons_on_avg: int) -> List[int]:
     one_way_range = int((num_steps-1)/2)*step_size
     lo = num_seasons_on_avg-one_way_range
     hi = num_seasons_on_avg+one_way_range
-    print(range(lo, hi))
     num_seasons_distribution = list(range(lo, hi+step_size, step_size))
     random.shuffle(num_seasons_distribution)
     return [num_seasons_on_avg] + num_seasons_distribution
