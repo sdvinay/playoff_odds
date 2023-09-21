@@ -27,19 +27,24 @@ def break_tie(teams):
 
 
 # Merge in league structure, and compute playoff seeding
-def process_sim_results(sim_results):
-    sim_results = sim_utils.add_run_ids(sim_results)
-    sim_results['wpct'] = sim_results['W'] / (sim_results['W'] + sim_results['L'])
+def process_sim_results(sim_results, played):
+    cur_standings = sim_utils.compute_standings(played)
+    standings = sim_utils.compute_standings_from_results(sim_results, cur_standings).reset_index()
+    job_id = sim_results.iloc[0]['job_id']
+    standings['job_id'] = job_id
+
+    standings = sim_utils.add_run_ids(standings)
+    standings['wpct'] = standings['W'] / (standings['W'] + standings['L'])
 
     # Merge in the div/lg data
-    sim_results = pd.merge(left=sim_results, right=ds.league_structure, left_on='team', right_index=True)
-    sim_results = sim_results.set_index(['run_id', 'team'])[['W', 'L', 'wpct', 'div', 'lg']]
+    standings = pd.merge(left=standings, right=ds.league_structure, left_on='team', right_index=True)
+    standings = standings.set_index(['run_id', 'team'])[['W', 'L', 'wpct', 'div', 'lg']]
 
     # compute div_wins and playoff seeds
-    add_division_winners(sim_results)
-    add_lg_ranks(sim_results)
+    add_division_winners(standings)
+    add_lg_ranks(standings)
 
-    return sim_results
+    return standings
 
 def summarize_results(standings):
     counts = standings.reset_index()[['team', 'lg_rank']].value_counts().unstack()
@@ -99,11 +104,6 @@ def get_tm_ranks(standings):
     return tms_by_rank.rename(columns={i: f'r{i}' for i in range(100)})
 
 
-def get_ratings(games):
-    ratings = games[['team1', 'rating1_pre']].drop_duplicates().set_index('team1')['rating1_pre']
-    return ratings.rename('rating').sort_values(ascending=False)
-
-
 def compute_probs(gms, ratings):
     rating1 = pd.merge(left=gms, right=ratings, left_on='team1', right_index=True, how='left')['rating']
     rating2 = pd.merge(left=gms, right=ratings, left_on='team2', right_index=True, how='left')['rating']
@@ -116,7 +116,7 @@ def add_variation_to_ratings(ratings):
 def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = True, save_ranks: bool = True, id: int = 0, show_summary: bool = True, vary_ratings: bool = False):
     print(f'Simulating {num_seasons} seasons as ID {id}')
     (played, remain) = ds.get_games()
-    cur_standings = sim_utils.compute_standings(played)
+
     ratings = ds.get_ratings()
     if vary_ratings:
         ratings = add_variation_to_ratings(ratings)
@@ -126,9 +126,8 @@ def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = 
     sim_results['job_id'] = id
     sim_results = sim_utils.add_run_ids(sim_results)
 
-    standings = sim_utils.compute_standings_from_results(sim_results, cur_standings)
+    standings = process_sim_results(sim_results, played)
     standings['job_id'] = id
-    standings = process_sim_results(standings.reset_index())
 
     if save_output:
         sim_output.write_output(standings, 'standings', id)
