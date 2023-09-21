@@ -5,25 +5,9 @@ import pandas as pd
 import numpy as np
 import series_probs_compute as probs
 import datasource_mlb as ds
-import random
 import tiebreakers
 import sim_utils
 import sim_output
-
-
-#tie_breakers = {}
-#def break_tie(teams):
-#   tm_key = tuple(sorted(list(teams)))
-#   if tm_key not in tie_breakers:
-#       standings = h2h_standings(ds.get_games()[0], teams)
-#       tie_breakers[tm_key] = standings.index.values
-#   return tie_breakers[tm_key]
-def break_tie(teams):
-    tms = tuple(sorted(teams))
-    if tms in tiebreakers.clinched_tie_breakers:
-        winner = tiebreakers.clinched_tie_breakers[tms]
-        return [winner] + [tm for tm in tms if tm != winner]
-    return random.sample(tms, len(teams))
 
 
 # Merge in league structure, and compute playoff seeding
@@ -70,7 +54,7 @@ def add_division_winners(standings):
     tied_teams = potential_div_winners.query('tied_teams>1').reset_index()
     if len(tied_teams)>0:
         tied_sets = tied_teams.groupby(['run_id', 'div'])['team'].apply(set)
-        tie_winners = tied_sets.apply(lambda tms: break_tie(tms)[0]).reset_index().set_index(['run_id', 'team']).index
+        tie_winners = tied_sets.apply(lambda tms: tiebreakers.break_tie(tms)[0]).reset_index().set_index(['run_id', 'team']).index
         standings.loc[tie_winners, 'div_win'] = True
     return standings
 
@@ -79,7 +63,7 @@ def add_lg_ranks(standings):
     tied_tm_ct = standings.groupby(['run_id', 'lg', 'wpct'])['wpct'].transform('size')
     if sum(tied_tm_ct) > 0:
         tied_sets = standings[tied_tm_ct>1].reset_index().groupby(['run_id', 'lg', 'wpct'])['team'].apply(set)
-        tie_orders = tied_sets.apply(lambda tms: break_tie(tms)).explode()
+        tie_orders = tied_sets.apply(lambda tms: tiebreakers.break_tie(tms)).explode()
         # We need to take tie-orders (which are ordered lists) and convert them into a number we can use for sorting
         tiebreak = (15 - tie_orders.groupby(['run_id', 'lg', 'wpct']).cumcount())
         standings['tiebreak'] = pd.concat([tie_orders, tiebreak], axis=1).reset_index().set_index(['run_id', 'team'])[0]

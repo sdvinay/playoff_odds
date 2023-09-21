@@ -1,5 +1,6 @@
 import datasource_mlb as ds
 import sim_utils
+import random
 
 def check_tie_breaker(teams):
     cur, remain = ds.get_games()
@@ -30,4 +31,12 @@ clinched_tie_breakers[('BOS', 'SEA')] = 'SEA'
 clinched_tie_breakers[('BAL', 'TEX')] = 'BAL'
 clinched_tie_breakers[('CIN', 'MIA')] = 'MIA'
 clinched_tie_breakers[('MIA', 'SF')] = 'SF'
+
+
+def break_tie(teams):
+    tms = tuple(sorted(teams))
+    if tms in clinched_tie_breakers:
+        winner = clinched_tie_breakers[tms]
+        return [winner] + [tm for tm in tms if tm != winner]
+    return random.sample(tms, len(teams))
 
