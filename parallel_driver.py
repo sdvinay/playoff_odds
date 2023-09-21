@@ -47,7 +47,8 @@ def get_job_size_distribution(num_seasons_on_avg):
 @print_perf_counter
 def summarize_data():
     summary = sim_output.gather_summaries()
-    tms_by_rank = sim_output.gather_ranks()
+    standings = sim_output.gather_results()
+    tms_by_rank = sr.get_tm_ranks(standings)
     print(sr.augment_summary(summary, tms_by_rank).to_string())
 
 

@@ -20,10 +20,6 @@ def sim_n_seasons(games, n):
     gms['L'] = np.where(rands>gms['win_prob'], gms['team1'], gms['team2'])
     return gms[['W', 'L', 'iter']]
 
-def get_tm_ranks(standings):
-    tms_by_rank = standings[['lg', 'lg_rank']].reset_index().set_index(['run_id', 'lg', 'lg_rank'])['team'].unstack(level='lg_rank')
-    return tms_by_rank.rename(columns={i: f'r{i}' for i in range(100)})
-
 
 def compute_probs(gms, ratings):
     rating1 = pd.merge(left=gms, right=ratings, left_on='team1', right_index=True, how='left')['rating']
@@ -34,7 +30,7 @@ def add_variation_to_ratings(ratings):
     offsets = (-100, 100, 0, 0)
     return ratings + np.random.choice(offsets, len(ratings))
 
-def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = True, save_ranks: bool = True, id: int = 0, show_summary: bool = True, vary_ratings: bool = False):
+def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = True, id: int = 0, show_summary: bool = True, vary_ratings: bool = False):
     print(f'Simulating {num_seasons} seasons as ID {id}')
     (played, remain) = ds.get_games()
 
@@ -56,9 +52,6 @@ def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = 
         summary = sim_results_processing.summarize_results(standings)
         sim_output.write_output(summary, 'summaries', id)
 
-    if save_ranks:
-        tms_by_rank = get_tm_ranks(standings)
-        sim_output.write_output(tms_by_rank, 'ranks', id)
 
 if __name__ == "__main__":
     typer.run(main) 

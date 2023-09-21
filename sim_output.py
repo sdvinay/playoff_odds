@@ -23,10 +23,6 @@ def gather_results():
     return gather_output('standings', ['run_id', 'team'])
 
 
-def gather_ranks():
-    return gather_output('ranks', ['run_id', 'lg'])
-
-
 def gather_summaries():
     summaries = gather_output('summaries', None)
     summary = summaries.groupby('team').sum()

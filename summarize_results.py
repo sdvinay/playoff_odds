@@ -14,6 +14,10 @@ def summarize_sim_results(df_results):
         summary[col] = summary[col].fillna(0).astype(int)
     return summary
 
+def get_tm_ranks(standings):
+    tms_by_rank = standings[['lg', 'lg_rank']].reset_index().set_index(['run_id', 'lg', 'lg_rank'])['team'].unstack(level='lg_rank')
+    return tms_by_rank.rename(columns={i: f'r{i}' for i in range(100)})
+
 
 def augment_summary(summary, tms_by_rank):
     summary['div_wins'] = summary[[f'r{i}' for i in range(1, 4)]].sum(axis=1)
