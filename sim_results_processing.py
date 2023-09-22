@@ -1,9 +1,10 @@
 import pandas as pd
 import tiebreakers
 import sim_utils
+import playoff_simulator as psim
 
 # Merge in league structure, and compute playoff seeding
-def process_sim_results(sim_results, played, league_structure):
+def process_sim_results(sim_results, played, league_structure, ratings):
     cur_standings = sim_utils.compute_standings(played)
     standings = sim_utils.compute_standings_from_results(sim_results, cur_standings).reset_index()
     job_id = sim_results.iloc[0]['job_id']
@@ -15,6 +16,9 @@ def process_sim_results(sim_results, played, league_structure):
     # Merge in the div/lg data
     standings = pd.merge(left=standings, right=league_structure, left_on='team', right_index=True)
     standings = standings.set_index(['run_id', 'team'])[['W', 'L', 'wpct', 'div', 'lg']]
+
+    # Merge in the ratings
+    standings = pd.merge(left=standings, right=ratings, left_on='team', right_index=True)
 
     # compute div_wins and playoff seeds
     add_division_winners(standings)

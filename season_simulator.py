@@ -43,7 +43,7 @@ def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = 
     sim_results['job_id'] = id
     sim_results = sim_utils.add_run_ids(sim_results)
 
-    standings = sim_results_processing.process_sim_results(sim_results, played, ds.league_structure)
+    standings = sim_results_processing.process_sim_results(sim_results, played, ds.league_structure, ratings)
 
     if save_output:
         sim_output.write_output(standings, 'standings', id)
