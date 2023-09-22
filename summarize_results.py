@@ -13,6 +13,7 @@ def summarize_sim_results(df_results):
     for col in counts.columns:
         summary[col] = summary[col].fillna(0).astype(int)
     summary['pennant_shares'] = df_results.groupby('team')['pennant_shares'].sum()
+    summary['pennant_shares'] = df_results.groupby('team')['pennant_shares'].sum()
     return summary
 
 def get_tm_ranks(standings):

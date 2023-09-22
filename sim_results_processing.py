@@ -4,6 +4,9 @@ import sim_utils
 import numpy as np
 from io import StringIO
 import series_probs_approx as probs
+import numpy as np
+from io import StringIO
+import series_probs_approx as probs
 
 # Merge in league structure, and compute playoff seeding
 def process_sim_results(sim_results, played, league_structure, ratings):
