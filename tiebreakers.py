@@ -10,7 +10,7 @@ def __check_tie_breaker(teams):
         gap = leader['W'] - leader['L']
         num_remaining = len(remain.query('team1 in @teams and team2 in @teams'))
         if gap > num_remaining:
-            return leader.name
+            return h2h.index.values
         
 
 def __find_all_clinched_tie_breakers():
@@ -21,16 +21,16 @@ def __find_all_clinched_tie_breakers():
             for tm2 in tms:
                 if tm1 < tm2:
                     tb = __check_tie_breaker([tm1, tm2])
-                    if tb:
+                    if tb is not None:
                         clinched_tie_breakers[(tm1, tm2)] = tb
     return clinched_tie_breakers
 
 def add_known_tie_breakers(tb):
-    tb[('SEA', 'TOR')] = 'SEA'
-    tb[('BOS', 'SEA')] = 'SEA'
-    tb[('BAL', 'TEX')] = 'BAL'
-    tb[('CIN', 'MIA')] = 'MIA'
-    tb[('MIA', 'SF')] = 'SF'
+    tb[('SEA', 'TOR')] = ['SEA', 'TOR']
+    tb[('BOS', 'SEA')] = ['SEA', 'BOS']
+    tb[('BAL', 'TEX')] = ['BAL', 'TEX']
+    tb[('CIN', 'MIA')] = ['MIA', 'CIN']
+    tb[('MIA', 'SF')]  = ['SF', 'MIA']
 
 __clinched_tie_breakers = __find_all_clinched_tie_breakers()
 add_known_tie_breakers(__clinched_tie_breakers)
@@ -38,7 +38,6 @@ add_known_tie_breakers(__clinched_tie_breakers)
 def break_tie(teams):
     tms = tuple(sorted(teams))
     if tms in __clinched_tie_breakers:
-        winner = __clinched_tie_breakers[tms]
-        return [winner] + [tm for tm in tms if tm != winner]
+        return __clinched_tie_breakers[tms]
     return random.sample(tms, len(teams))
 
