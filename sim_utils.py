@@ -4,10 +4,11 @@ import numpy as np
 def compute_standings(gms_played, groupby = []):
     standings = pd.concat([gms_played.groupby(groupby + [dec])[dec].count() for dec in ['W', 'L']], axis=1)
     standings.index.names = groupby + ['team']
-    standings['wpct'] = standings['W']/standings.sum(axis=1)
     
     for col in standings.columns:
         standings[col] = standings[col].fillna(0).astype(int)
+
+    standings['wpct'] = standings['W']/standings.sum(axis=1)
     return standings.sort_values('wpct', ascending=False)
 
 
