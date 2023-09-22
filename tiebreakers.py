@@ -25,12 +25,15 @@ def __find_all_clinched_tie_breakers():
                         clinched_tie_breakers[(tm1, tm2)] = tb
     return clinched_tie_breakers
 
+def add_known_tie_breakers(tb):
+    tb[('SEA', 'TOR')] = 'SEA'
+    tb[('BOS', 'SEA')] = 'SEA'
+    tb[('BAL', 'TEX')] = 'BAL'
+    tb[('CIN', 'MIA')] = 'MIA'
+    tb[('MIA', 'SF')] = 'SF'
+
 __clinched_tie_breakers = __find_all_clinched_tie_breakers()
-__clinched_tie_breakers[('SEA', 'TOR')] = 'SEA'
-__clinched_tie_breakers[('BOS', 'SEA')] = 'SEA'
-__clinched_tie_breakers[('BAL', 'TEX')] = 'BAL'
-__clinched_tie_breakers[('CIN', 'MIA')] = 'MIA'
-__clinched_tie_breakers[('MIA', 'SF')] = 'SF'
+add_known_tie_breakers(__clinched_tie_breakers)
 
 def break_tie(teams):
     tms = tuple(sorted(teams))
