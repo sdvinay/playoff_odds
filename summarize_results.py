@@ -37,8 +37,8 @@ def augment_summary(summary, tms_by_rank):
     # Compute home games
     # Play out the wild-card series
     summary['home_game'] = compute_home_game_prob(summary, tms_by_rank, ratings)
-
-    cols = ['mean', 'max', 'min'] + [f'r{i}' for i in range(1, 7)] + ['div_wins', 'playoffs', 'ws_shares', 'home_game']
+    summary = pd.merge(left=summary, right=ratings.astype(int), left_index=True, right_index=True)
+    cols = ['rating', 'mean', 'max', 'min'] + [f'r{i}' for i in range(1, 7)] + ['div_wins', 'playoffs', 'lds_shares', 'pennant_shares', 'ws_shares', 'home_game']
     return summary[cols].sort_values(['ws_shares', 'mean'], ascending=False)
 
 def restructure_results(sim_results):
