@@ -54,7 +54,8 @@ def summarize_data():
     summary = sim_output.gather_summaries()
     standings = sim_output.gather_results()
     tms_by_rank = sr.get_tm_ranks(standings)
-    print(sr.augment_summary(summary, tms_by_rank).to_string())
+    with pd.option_context('display.float_format', '{:,.2f}'.format):
+        print(sr.augment_summary(summary, tms_by_rank))
 
 
 @print_perf_counter
