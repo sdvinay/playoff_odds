@@ -39,5 +39,27 @@ def break_tie(teams):
     tms = tuple(sorted(teams))
     if tms in __clinched_tie_breakers:
         return __clinched_tie_breakers[tms]
+
+    # For three-way ties, per MLB rules (https://www.mlb.com/news/mlb-playoff-tiebreaker-rules)
+    # First see if any team wins both two-way tie-breakers
+    # Then see if any team loses both two-way tie breakers TODO
+    if len(tms) == 3:
+        t01 = __clinched_tie_breakers.get(tuple((tms[0], tms[1])))
+        t02 = __clinched_tie_breakers.get(tuple((tms[0], tms[2])))
+        t12 = __clinched_tie_breakers.get(tuple((tms[1], tms[2])))
+
+        # First see if any team wins both two-way tie-breakers
+        if t01 is not None and t02 is not None and t12 is not None:
+            tb = None
+            if t01[0] == t02[0]: # 0 has both h2hs
+                tb = [tms[0]] + list(t12)
+            if t01[0] == t12[0]: # 1 has both h2hs
+                tb = [tms[1]] + list(t02)
+            if t02[0] == t12[0]: # 2 has both h2hs
+                tb = [tms[2]] + list(t01)
+            
+            if tb is not None:
+                __clinched_tie_breakers[tms] = tb
+                return tb
     return random.sample(tms, len(teams))
 
