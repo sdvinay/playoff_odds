@@ -88,10 +88,12 @@ def break_tie(teams):
             tb = None
             if t01[0] == t02[0]: # 0 has both h2hs
                 tb = [tms[0]] + list(t12)
-            if t01[0] == t12[0]: # 1 has both h2hs
+            elif t01[0] == t12[0]: # 1 has both h2hs
                 tb = [tms[1]] + list(t02)
-            if t02[0] == t12[0]: # 2 has both h2hs
+            elif t02[0] == t12[0]: # 2 has both h2hs
                 tb = [tms[2]] + list(t01)
+            else: # That means we have a cycle, so look at common h2h record
+                tb = __check_tie_breaker(tms)
             
             if tb is not None:
                 __clinched_tie_breakers[tms] = tb
