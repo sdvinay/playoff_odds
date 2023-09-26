@@ -96,5 +96,17 @@ def break_tie(teams):
             if tb is not None:
                 __clinched_tie_breakers[tms] = tb
                 return tb
+            
+            # Now see if either team has lost both tie-breakers
+            if t01[1] == t02[1]: # 0 has lost both h2hs
+                tb = list(t12) + [tms[0]]
+            if t01[1] == t12[1]: # 1 has lost both h2hs
+                tb = list(t02) + [tms[1]]
+            if t02[1] == t12[1]: # 2 has lost both h2hs
+                tb = list(t01) + [tms[2]]
+            
+            if tb is not None:
+                __clinched_tie_breakers[tms] = tb
+                return tb
     return random.sample(tms, len(teams))
 
