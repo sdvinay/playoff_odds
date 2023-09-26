@@ -2,6 +2,10 @@ import datasource_mlb as ds
 import sim_utils
 import random
 
+# This checks whether a tie can definitively be broken among a set of teams
+# And if so, it returns the tie order. Returns None otherwise
+# For now this only considers H2H record in played games
+# Does not consider intradvisional records
 def __check_tie_breaker(teams):
     cur, remain = ds.get_games()
     h2h = sim_utils.h2h_standings(cur, teams)
@@ -9,10 +13,13 @@ def __check_tie_breaker(teams):
         leader = h2h.iloc[0]
         gap = leader['W'] - leader['L']
         num_remaining = len(remain.query('team1 in @teams and team2 in @teams'))
+        # This checks if one team has a clinched a >.500 record in H2H games
+        # This logic is only correct in a 2-way tie
+        # In a multi-way tie, this may yield a false positive (since multiple teams can finish >.500) TODO
         if gap > num_remaining:
             return h2h.index.values
-        
 
+# This iterates over all possible two-way ties, checks if any are clinched, caching the values
 def __find_all_clinched_tie_breakers():
     clinched_tie_breakers = {}
     for lg in ds.league_structure['lg'].unique():
@@ -25,48 +32,61 @@ def __find_all_clinched_tie_breakers():
                         clinched_tie_breakers[(tm1, tm2)] = tb
     return clinched_tie_breakers
 
+# Adds a given tie-breaker ordering to the set of known tie-breakers
+def __add_tie_breaker(tb, teams):
+    k = tuple(sorted(teams))
+    if k not in tb:
+        val = list(teams)
+        tb[k] = val
+
+# This adds a set of "known" hard-coded tie-breakers, that can't be computed
 def add_known_tie_breakers(tb):
-    # two-way ties with tied h2h records, broken by intradivisional record
-    tb[('SEA', 'TOR')] = ['SEA', 'TOR']
-    tb[('MIN', 'TOR')] = ['MIN', 'TOR']
-    tb[('BOS', 'SEA')] = ['SEA', 'BOS']
-    tb[('BAL', 'TEX')] = ['BAL', 'TEX']
-    tb[('CIN', 'MIA')] = ['MIA', 'CIN']
-    tb[('MIA', 'SF')]  = ['SF', 'MIA']
-    tb[('CIN', 'SD')]  = ['SD', 'CIN']
-    tb[('DET', 'LAA')]  = ['DET', 'LAA']
+    known_tie_breakers = [
+        # two-way ties with tied h2h records, broken by intradivisional record
+        ['SEA', 'TOR'],
+        ['MIN', 'TOR'],
+        ['SEA', 'BOS'],
+        ['BAL', 'TEX'],
+        ['MIA', 'CIN'],
+        ['SF', 'MIA'],
+        ['SD', 'CIN'],
+        ['DET', 'LAA'],
 
-    # two-way ties that haven't been clinched yet, but will for the tie be to relevant
-    tb[('CHC', 'MIL')]  = ['CHC', 'MIL']
-    tb[('HOU', 'SEA', 'TEX')] = ['SEA', 'TEX', 'HOU']
+        # two-way ties that haven't been clinched yet, but will for the tie be to relevant
+        ['CHC', 'MIL'],
+        ['SEA', 'TEX', 'HOU'],
+
+        # three-ways where all the two-ways are cycles, broken by h2h record (and clinched),
+        ['SD', 'MIA', 'AZ'],
+        ['SD', 'MIA', 'CHC'],
+        ['CHC', 'MIA', 'SF'], # this one came to intradivision record
+        ['CIN', 'SD', 'AZ'],
+        ['AZ', 'SF', 'CIN'],
+        ['CIN', 'CHC', 'SD'],
+        ['CHC', 'CIN', 'SF'],
+        ['HOU', 'TEX', 'TOR'],
+        ['MIN', 'TOR', 'HOU'],
+        ['TEX', 'MIN', 'SEA'],
+
+        # four-ways settled on common h2h records (I'm not sure this is correct)
+        ['CIN', 'SD', 'MIA', 'AZ'],
+        ['AZ', 'MIA', 'SD', 'CHC'],
+        ['MIA', 'AZ', 'CHC', 'SF'],
+        ['AZ', 'CIN', 'SD', 'CHC'],
+        ['SD', 'CIN', 'MIA', 'CHC'],
+        ['AZ', 'CIN', 'CHC', 'SF'],
+        ['MIA', 'AZ', 'CIN', 'CHC'],
+        ['TEX', 'MIN', 'TOR', 'SEA'], #not sure this one is clinched
+        ['SEA', 'MIN', 'TOR', 'HOU'], #not sure this one is clinched
+
+        # five-way (same)
+        ['AZ', 'MIA', 'CIN', 'SD', 'CHC']
+    ]
+
+    for tms in known_tie_breakers:
+        __add_tie_breaker(tb, tms)
 
 
-    # three-ways where all the two-ways are cycles, broken by h2h record (and clinched)
-    tb[('AZ', 'MIA', 'SD')] = ['SD', 'MIA', 'AZ']
-    tb[('CHC', 'MIA', 'SD')] = ['SD', 'MIA', 'CHC']
-    tb[('CHC', 'MIA', 'SF')] = ['CHC', 'MIA', 'SF'] # this one came to intradivision record
-    tb[('AZ', 'CIN', 'SD')] = ['CIN', 'SD', 'AZ']
-    tb[('AZ', 'CIN', 'SF')] = ['AZ', 'SF', 'CIN']
-    tb[('CHC', 'CIN', 'SD')] = ['CIN', 'CHC', 'SD']
-    tb[('CHC', 'CIN', 'SF')] = ['CHC', 'CIN', 'SF']
-    tb[('HOU', 'TEX', 'TOR')] = ['HOU', 'TEX', 'TOR']
-    tb[('HOU', 'MIN', 'TOR')] = ['MIN', 'TOR', 'HOU']
-    tb[('MIN', 'SEA', 'TEX')] = ['TEX', 'MIN', 'SEA']
-
-    # four-ways settled on common h2h records (I'm not sure this is correct)
-    tb[('AZ', 'CIN', 'MIA', 'SD')] = ['CIN', 'SD', 'MIA', 'AZ']
-    tb[('AZ', 'CHC', 'MIA', 'SD')] = ['AZ', 'MIA', 'SD', 'CHC']
-    tb[('AZ', 'CHC', 'MIA', 'SF')] = ['MIA', 'AZ', 'CHC', 'SF']
-    tb[('AZ', 'CHC', 'CIN', 'SD')] = ['AZ', 'CIN', 'SD', 'CHC']
-    tb[('CHC', 'CIN', 'MIA', 'SD')] = ['SD', 'CIN', 'MIA', 'CHC']
-    tb[('AZ', 'CHC', 'CIN', 'SF')] = ['AZ', 'CIN', 'CHC', 'SF']
-    tb[('AZ', 'CHC', 'CIN', 'MIA')] = ['MIA', 'AZ', 'CIN', 'CHC']
-    tb[('MIN', 'SEA', 'TEX', 'TOR')] = ['TEX', 'MIN', 'TOR', 'SEA'] #not sure this one is clinched
-    tb[('HOU', 'MIN', 'SEA', 'TOR')] = ['SEA', 'MIN', 'TOR', 'HOU'] #not sure this one is clinched
-
-
-    # five-way (same)
-    tb[('AZ', 'CHC', 'CIN', 'MIA', 'SD')] = ['AZ', 'MIA', 'CIN', 'SD', 'CHC']
 __clinched_tie_breakers = __find_all_clinched_tie_breakers()
 add_known_tie_breakers(__clinched_tie_breakers)
 
@@ -96,7 +116,7 @@ def break_tie(teams):
                 tb = __check_tie_breaker(tms)
             
             if tb is not None:
-                __clinched_tie_breakers[tms] = tb
+                __add_tie_breaker(__clinched_tie_breakers, tb)
                 return tb
             
             # Now see if either team has lost both tie-breakers
@@ -108,13 +128,13 @@ def break_tie(teams):
                 tb = list(t01) + [tms[2]]
             
             if tb is not None:
-                __clinched_tie_breakers[tms] = tb
+                __add_tie_breaker(__clinched_tie_breakers, tb)
                 return tb
 
     if len(tms) > 3:
         tb = __check_tie_breaker(tms)
         if tb is not None:
-            __clinched_tie_breakers[tms] = tb
+            __add_tie_breaker(__clinched_tie_breakers, tb)
             return tb
     #print(f'Breaking tie randomly among {tms}')
     return random.sample(tms, len(teams))
