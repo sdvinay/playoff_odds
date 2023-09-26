@@ -26,12 +26,47 @@ def __find_all_clinched_tie_breakers():
     return clinched_tie_breakers
 
 def add_known_tie_breakers(tb):
+    # two-way ties with tied h2h records, broken by intradivisional record
     tb[('SEA', 'TOR')] = ['SEA', 'TOR']
+    tb[('MIN', 'TOR')] = ['MIN', 'TOR']
     tb[('BOS', 'SEA')] = ['SEA', 'BOS']
     tb[('BAL', 'TEX')] = ['BAL', 'TEX']
     tb[('CIN', 'MIA')] = ['MIA', 'CIN']
     tb[('MIA', 'SF')]  = ['SF', 'MIA']
+    tb[('CIN', 'SD')]  = ['SD', 'CIN']
+    tb[('DET', 'LAA')]  = ['DET', 'LAA']
 
+    # two-way ties that haven't been clinched yet, but will for the tie be to relevant
+    tb[('CHC', 'MIL')]  = ['CHC', 'MIL']
+    tb[('HOU', 'SEA', 'TEX')] = ['SEA', 'TEX', 'HOU']
+
+
+    # three-ways where all the two-ways are cycles, broken by h2h record (and clinched)
+    tb[('AZ', 'MIA', 'SD')] = ['SD', 'MIA', 'AZ']
+    tb[('CHC', 'MIA', 'SD')] = ['SD', 'MIA', 'CHC']
+    tb[('CHC', 'MIA', 'SF')] = ['CHC', 'MIA', 'SF'] # this one came to intradivision record
+    tb[('AZ', 'CIN', 'SD')] = ['CIN', 'SD', 'AZ']
+    tb[('AZ', 'CIN', 'SF')] = ['AZ', 'SF', 'CIN']
+    tb[('CHC', 'CIN', 'SD')] = ['CIN', 'CHC', 'SD']
+    tb[('CHC', 'CIN', 'SF')] = ['CHC', 'CIN', 'SF']
+    tb[('HOU', 'TEX', 'TOR')] = ['HOU', 'TEX', 'TOR']
+    tb[('HOU', 'MIN', 'TOR')] = ['MIN', 'TOR', 'HOU']
+    tb[('MIN', 'SEA', 'TEX')] = ['TEX', 'MIN', 'SEA']
+
+    # four-ways settled on common h2h records (I'm not sure this is correct)
+    tb[('AZ', 'CIN', 'MIA', 'SD')] = ['CIN', 'SD', 'MIA', 'AZ']
+    tb[('AZ', 'CHC', 'MIA', 'SD')] = ['AZ', 'MIA', 'SD', 'CHC']
+    tb[('AZ', 'CHC', 'MIA', 'SF')] = ['MIA', 'AZ', 'CHC', 'SF']
+    tb[('AZ', 'CHC', 'CIN', 'SD')] = ['AZ', 'CIN', 'SD', 'CHC']
+    tb[('CHC', 'CIN', 'MIA', 'SD')] = ['SD', 'CIN', 'MIA', 'CHC']
+    tb[('AZ', 'CHC', 'CIN', 'SF')] = ['AZ', 'CIN', 'CHC', 'SF']
+    tb[('AZ', 'CHC', 'CIN', 'MIA')] = ['MIA', 'AZ', 'CIN', 'CHC']
+    tb[('MIN', 'SEA', 'TEX', 'TOR')] = ['TEX', 'MIN', 'TOR', 'SEA'] #not sure this one is clinched
+    tb[('HOU', 'MIN', 'SEA', 'TOR')] = ['SEA', 'MIN', 'TOR', 'HOU'] #not sure this one is clinched
+
+
+    # five-way (same)
+    tb[('AZ', 'CHC', 'CIN', 'MIA', 'SD')] = ['AZ', 'MIA', 'CIN', 'SD', 'CHC']
 __clinched_tie_breakers = __find_all_clinched_tie_breakers()
 add_known_tie_breakers(__clinched_tie_breakers)
 
