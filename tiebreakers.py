@@ -108,5 +108,6 @@ def break_tie(teams):
             if tb is not None:
                 __clinched_tie_breakers[tms] = tb
                 return tb
+    #print(f'Breaking tie randomly among {tms}')
     return random.sample(tms, len(teams))
 
