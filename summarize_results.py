@@ -28,18 +28,9 @@ def augment_summary(summary, tms_by_rank):
     # Get ratings for computing the post-season
     ratings = sim.ds.get_ratings()
 
-    # Compute pennant and championship shares
-    pennant_shares = compute_pennant_shares(tms_by_rank, ratings)
-    ws_shares = compute_ws_shares(pennant_shares, ratings, summary['mean'])
-    summary['ws_shares'] = pd.Series(ws_shares)
-    summary['ws_shares'] = summary['ws_shares'].fillna(0)
-
-    # Compute home games
-    # Play out the wild-card series
-    summary['home_game'] = compute_home_game_prob(summary, tms_by_rank, ratings)
     summary = pd.merge(left=summary, right=ratings.astype(int), left_index=True, right_index=True)
-    cols = ['rating', 'mean', 'max', 'min'] + [f'r{i}' for i in range(1, 7)] + ['div_wins', 'playoffs', 'ws_shares', 'home_game']
-    return summary[cols].sort_values(['ws_shares', 'mean'], ascending=False)
+    cols = ['rating', 'mean', 'max', 'min'] + [f'r{i}' for i in range(1, 7)] + ['div_wins', 'playoffs']
+    return summary[cols].sort_values(['playoffs', 'mean'], ascending=False)
 
 def restructure_results(sim_results):
     wins = sim_results['W'].unstack(level='team')
