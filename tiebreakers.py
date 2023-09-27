@@ -55,32 +55,6 @@ def add_known_tie_breakers(tb):
         # two-way ties that haven't been clinched yet, but will for the tie be to relevant
         ['CHC', 'MIL'],
         ['SEA', 'TEX', 'HOU'],
-
-        # three-ways where all the two-ways are cycles, broken by h2h record (and clinched),
-        ['SD', 'MIA', 'AZ'],
-        ['SD', 'MIA', 'CHC'],
-        ['CHC', 'MIA', 'SF'], # this one came to intradivision record
-        ['CIN', 'SD', 'AZ'],
-        ['AZ', 'SF', 'CIN'],
-        ['CIN', 'CHC', 'SD'],
-        ['CHC', 'CIN', 'SF'],
-        ['HOU', 'TEX', 'TOR'],
-        ['MIN', 'TOR', 'HOU'],
-        ['TEX', 'MIN', 'SEA'],
-
-        # four-ways settled on common h2h records (I'm not sure this is correct)
-        ['CIN', 'SD', 'MIA', 'AZ'],
-        ['AZ', 'MIA', 'SD', 'CHC'],
-        ['MIA', 'AZ', 'CHC', 'SF'],
-        ['AZ', 'CIN', 'SD', 'CHC'],
-        ['SD', 'CIN', 'MIA', 'CHC'],
-        ['AZ', 'CIN', 'CHC', 'SF'],
-        ['MIA', 'AZ', 'CIN', 'CHC'],
-        ['TEX', 'MIN', 'TOR', 'SEA'], #not sure this one is clinched
-        ['SEA', 'MIN', 'TOR', 'HOU'], #not sure this one is clinched
-
-        # five-way (same)
-        ['AZ', 'MIA', 'CIN', 'SD', 'CHC']
     ]
 
     for tms in known_tie_breakers:
