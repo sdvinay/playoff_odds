@@ -33,6 +33,8 @@ def add_variation_to_ratings(ratings):
 def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = True, id: int = 0, show_summary: bool = True, vary_ratings: bool = False):
     print(f'Simulating {num_seasons} seasons as ID {id}')
     (played, remain) = ds.get_games()
+    if len(remain) == 0:
+        raise NotImplementedError("Aborting: simulator doesn't function properly if no games are remaining")
 
     ratings = ds.get_ratings()
     if vary_ratings:
