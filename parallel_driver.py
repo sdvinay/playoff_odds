@@ -28,8 +28,8 @@ def print_perf_counter(func):
         return result
     return wrapper
 
-def sim_seasons(num_seasons: int, id: int, vary_ratings: bool):
-    sim.main(id = str(id), show_summary=False, num_seasons=num_seasons, vary_ratings=vary_ratings)
+def sim_seasons(num_seasons: int, id: int, rating_variation_amt: int):
+    sim.main(id = str(id), show_summary=False, num_seasons=num_seasons, rating_variation_amt = rating_variation_amt)
     return [id, num_seasons]
 
 
@@ -58,12 +58,12 @@ def summarize_data():
 
 
 @print_perf_counter
-def parallel_driver(num_jobs: int, num_seasons_per_job: int, vary_ratings: bool):
+def parallel_driver(num_jobs: int, num_seasons_per_job: int, rating_variation_amt: int):
     num_seasons_distribution = get_job_size_distribution(num_seasons_per_job)
     with concurrent.futures.ProcessPoolExecutor() as executor:
         def submit_job(id):
             num_seasons = num_seasons_distribution[id%len(num_seasons_distribution)]
-            return executor.submit(sim_seasons, num_seasons, id, vary_ratings)
+            return executor.submit(sim_seasons, num_seasons, id, rating_variation_amt)
 
         futures = [submit_job(id) for id in range(num_jobs)]
 
@@ -74,11 +74,11 @@ def parallel_driver(num_jobs: int, num_seasons_per_job: int, vary_ratings: bool)
                 progress.update(simming, advance=f.result()[1])
 
 
-def main(num_jobs: int = 100, num_seasons_per_job: int = 1000, vary_ratings: bool = True, clear_output: bool = True):
+def main(num_jobs: int = 100, num_seasons_per_job: int = 1000, rating_variation_amt: int = 0, clear_output: bool = True):
     if clear_output and os.path.exists('output'):
         shutil.rmtree('output')
 
-    parallel_driver(num_jobs, num_seasons_per_job, vary_ratings)
+    parallel_driver(num_jobs, num_seasons_per_job, rating_variation_amt)
     summarize_data()
 
 

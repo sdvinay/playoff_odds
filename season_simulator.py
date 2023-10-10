@@ -27,18 +27,17 @@ def compute_probs(gms, ratings):
     rating2 = pd.merge(left=gms, right=ratings, left_on='team2', right_index=True, how='left')['rating']
     return probs.p_game(rating1, rating2)    
     
-def add_variation_to_ratings(ratings):
-    offsets = (-100, 100, 0, 0)
-    return ratings + np.random.choice(offsets, len(ratings))
+def add_variation_to_ratings(ratings, variation_amt = 40):
+    return ratings + np.random.normal(0, variation_amt, len(ratings))
 
-def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = True, id: int = 0, show_summary: bool = True, vary_ratings: bool = False):
+def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = True, id: int = 0, show_summary: bool = True, rating_variation_amt: int = 0):
     (played, remain) = ds.get_games()
     if len(remain) == 0:
         raise NotImplementedError("Aborting: simulator doesn't function properly if no games are remaining")
 
     ratings = ds.get_ratings()
-    if vary_ratings:
-        ratings = add_variation_to_ratings(ratings)
+    if rating_variation_amt > 0:
+        ratings = add_variation_to_ratings(ratings, rating_variation_amt)
     remain['win_prob'] = compute_probs(remain, ratings)
 
     sim_results = sim_n_seasons(remain, num_seasons)
