@@ -74,7 +74,7 @@ def parallel_driver(num_jobs: int, num_seasons_per_job: int, rating_variation_am
                 progress.update(simming, advance=f.result()[1])
 
 
-def main(num_jobs: int = 100, num_seasons_per_job: int = 1000, rating_variation_amt: int = 0, clear_output: bool = True):
+def main(num_jobs: int = 100, num_seasons_per_job: int = 1000, rating_variation_amt: int = 30, clear_output: bool = True):
     if clear_output and os.path.exists('output'):
         shutil.rmtree('output')
 
