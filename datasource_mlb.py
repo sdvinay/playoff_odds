@@ -86,6 +86,13 @@ def __write_table_to_cache(df, filename_prefix):
 def __get_games_from_cache():
     played = __read_table_from_cache('cur', 'gamePk')
     remain = __read_table_from_cache('remain', 'gamePk')
+    # This is a temporary workaround for when the season is completed
+    # It pretends some games are still unplayed
+    if len(remain) == 0:
+        total_gms = len(played)
+        played = played.head(total_gms-400)
+        remain = played.tail(400)[['team1', 'team2']]
+
     return (played, remain)
 
 def __get_ratings_from_cache():
