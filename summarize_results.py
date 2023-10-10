@@ -19,7 +19,7 @@ def get_tm_ranks(standings):
     return tms_by_rank.rename(columns={i: f'r{i}' for i in range(100)})
 
 
-def augment_summary(summary, tms_by_rank):
+def augment_summary(summary):
     summary['div_wins'] = summary[[f'r{i}' for i in range(1, 4)]].sum(axis=1)
     summary['playoffs'] = summary[[f'r{i}' for i in range(1, 7)]].sum(axis=1)
 

@@ -52,10 +52,8 @@ def get_job_size_distribution(num_seasons_on_avg: int) -> List[int]:
 @print_perf_counter
 def summarize_data():
     summary = sim_output.gather_summaries()
-    standings = sim_output.gather_results()
-    tms_by_rank = sr.get_tm_ranks(standings)
     with pd.option_context('display.float_format', '{:,.2f}'.format):
-        print(sr.augment_summary(summary, tms_by_rank))
+        print(sr.augment_summary(summary))
 
 
 @print_perf_counter
