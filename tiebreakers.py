@@ -42,19 +42,6 @@ def __add_tie_breaker(tb, teams):
 # This adds a set of "known" hard-coded tie-breakers, that can't be computed
 def add_known_tie_breakers(tb):
     known_tie_breakers = [
-        # two-way ties with tied h2h records, broken by intradivisional record
-        ['SEA', 'TOR'],
-        ['MIN', 'TOR'],
-        ['SEA', 'BOS'],
-        ['BAL', 'TEX'],
-        ['MIA', 'CIN'],
-        ['SF', 'MIA'],
-        ['SD', 'CIN'],
-        ['DET', 'LAA'],
-
-        # two-way ties that haven't been clinched yet, but will for the tie be to relevant
-        ['CHC', 'MIL'],
-        ['SEA', 'TEX', 'HOU'],
     ]
 
     for tms in known_tie_breakers:
