@@ -6,6 +6,7 @@ import random
 import shutil
 import os
 from typing import List
+from rich.progress import Progress, MofNCompleteColumn, TimeElapsedColumn
 
 import season_simulator as sim
 import summarize_results as sr
@@ -29,7 +30,7 @@ def print_perf_counter(func):
 
 def sim_seasons(num_seasons: int, id: int, vary_ratings: bool):
     sim.main(id = str(id), show_summary=False, num_seasons=num_seasons, vary_ratings=vary_ratings)
-    return id
+    return [id, num_seasons]
 
 
 # We want the jobs to be of varying size, to stagger their start/end times
@@ -66,8 +67,11 @@ def parallel_driver(num_jobs: int, num_seasons_per_job: int, vary_ratings: bool)
 
         futures = [submit_job(id) for id in range(num_jobs)]
 
-        for f in concurrent.futures.as_completed(futures):
-            print(f'Job {f.result()} completed')
+        with Progress(*Progress.get_default_columns(), TimeElapsedColumn(), MofNCompleteColumn()) as progress:
+            simming = progress.add_task("Simulating seasons", total=num_jobs*num_seasons_per_job)
+
+            for f in concurrent.futures.as_completed(futures):
+                progress.update(simming, advance=f.result()[1])
 
 
 def main(num_jobs: int = 100, num_seasons_per_job: int = 1000, vary_ratings: bool = True, clear_output: bool = True):
