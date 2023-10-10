@@ -8,6 +8,7 @@ import datasource_mlb as ds
 import sim_utils
 import sim_results_processing
 import sim_output
+import summarize_results as sr
 
 
 
@@ -53,6 +54,8 @@ def main(num_seasons: int = 100, save_output: bool = True, save_summary: bool = 
     if save_summary:
         summary = sim_results_processing.summarize_results(standings)
         sim_output.write_output(summary, 'summaries', id)
+    if show_summary:
+        print(sr.augment_summary(summary))
 
 
 if __name__ == "__main__":
