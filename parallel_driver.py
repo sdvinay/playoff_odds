@@ -41,7 +41,7 @@ def sim_seasons(num_seasons: int, id: int, rating_variation_amt: int):
 @print_perf_counter
 def get_job_size_distribution(num_seasons_on_avg: int) -> List[int]:
     num_steps = 9
-    step_size = int(num_seasons_on_avg/num_steps)
+    step_size = int(num_seasons_on_avg/(num_steps+1))
     one_way_range = int((num_steps-1)/2)*step_size
     lo = num_seasons_on_avg-one_way_range
     hi = num_seasons_on_avg+one_way_range
