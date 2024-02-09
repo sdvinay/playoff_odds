@@ -39,7 +39,7 @@ def summarize_results(standings):
 def add_division_winners(standings):
     standings['div_win'] = False
 
-    div_leading_wpct = standings.groupby(['run_id', 'div'])['wpct'].transform(max)
+    div_leading_wpct = standings.groupby(['run_id', 'div'])['wpct'].transform('max')
     potential_div_winners = standings.query('wpct == @div_leading_wpct')
     tied_team_ct = potential_div_winners.reset_index()[['run_id', 'div']].value_counts().rename("tied_teams")
     potential_div_winners = pd.merge(left=potential_div_winners.reset_index(), right=tied_team_ct, on=['run_id', 'div']).set_index(['run_id', 'team'])
@@ -63,7 +63,7 @@ def add_lg_ranks(standings):
         # We need to take tie-orders (which are ordered lists) and convert them into a number we can use for sorting
         tiebreak = (15 - tie_orders.groupby(['run_id', 'lg', 'wpct']).cumcount())
         standings['tiebreak'] = pd.concat([tie_orders, tiebreak], axis=1).reset_index().set_index(['run_id', 'team'])[0]
-        standings['tiebreak'].fillna(0, inplace=True)
+        standings.fillna({'tiebreak': 0}, inplace=True)
     else:
         standings['tiebreak'] = 0
 
