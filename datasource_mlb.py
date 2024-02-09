@@ -57,7 +57,25 @@ def __get_games_impl():
 # For compatibility with the rest of the system, return ratings on the ELO scale
 # by converting regressed w% to ELO (based on research I've done in
 # elo_vs_wpct.ipynb)
-def __get_ratings_impl():
+def __get_ratings_mlb():
+    teams_resp = requests.get(TEAMS_URL, params | {'hydrate': 'standings'}).json()
+    records = pd.json_normalize(teams_resp['teams'], 
+                            record_path=['record', 'records', 'expectedRecords'], 
+                            meta=['abbreviation', ['record', 'wins'], ['record', 'losses']]).query('type=="xWinLoss"')
+    records = records.rename(columns = {'abbreviation': 'team'}).set_index('team')
+    comb_wins = records[['wins', 'record.wins']].mean(axis=1) # 'wins' is pythag wins
+    g = records[['wins', 'losses']].sum(axis=1)
+    regressed_wpct = (comb_wins+35)/(g+70)
+    
+    # Go from regressed wpct to ELO
+    # ELO scales at 706*proj_wpct
+    # We'll center it at 1500, so add 1147
+    elo = regressed_wpct*706+1147
+    ratings = elo.rename('rating')
+    ratings.index.name = 'team'
+    return ratings
+
+def __get_ratings_fangraphs():
     url = 'https://www.fangraphs.com/api/playoff-odds/odds?dateDelta=&projectionMode=2&standingsType=mlb'
     json_response = requests.get(url).json()
     proj = pd.json_normalize(json_response, max_level=1)
@@ -67,6 +85,7 @@ def __get_ratings_impl():
     ratings = (df['quality']*706+1147).rename('rating')
     return ratings
 
+__get_ratings_impl = __get_ratings_fangraphs
 
 def __read_table_from_cache(filename_prefix, index_col):
     try:
@@ -80,11 +99,7 @@ def __read_table_from_cache(filename_prefix, index_col):
 def __write_table_to_cache(df, filename_prefix):
     if not os.path.exists (__CACHE_DIR):
         os.makedirs(__CACHE_DIR)
-    cache_file_path = f'{__CACHE_DIR}/{filename_prefix}.feather'
-    if df is not None:
-        df.reset_index().to_feather(cache_file_path)
-    elif os.path.exists(cache_file_path):
-        os.remove(cache_file_path)
+    df.reset_index().to_feather(f'{__CACHE_DIR}/{filename_prefix}.feather')
 
 def __get_games_from_cache():
     played = __read_table_from_cache('cur', 'gamePk')
