@@ -9,7 +9,7 @@ import random
 def __check_tie_breaker(teams):
     cur, remain = ds.get_games()
     h2h = sim_utils.h2h_standings(cur, teams)
-    if len(h2h) > 0:
+    if h2h is not None and len(h2h) > 0:
         leader = h2h.iloc[0]
         gap = leader['W'] - leader['L']
         num_remaining = len(remain.query('team1 in @teams and team2 in @teams'))

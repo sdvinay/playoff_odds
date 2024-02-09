@@ -7,7 +7,7 @@ import os
 
 SCHEDULE_URL = 'https://statsapi.mlb.com/api/v1/schedule'
 TEAMS_URL = 'https://statsapi.mlb.com/api/v1/teams'
-params = {'sportId': 1, 'season': 2023}
+params = {'sportId': 1, 'season': 2024}
 
 __CACHE_DIR = 'mlbapi_cache'
 
@@ -26,22 +26,29 @@ def __get_games_impl():
     reg = all_gms.query('gameType=="R"')
 
     # Remove the stubs of games that were rescheduled or suspended
-    reg = reg.loc[reg.fillna(0).query('resumeDate==0 and rescheduleDate==0').index].set_index('gamePk')
+    if 'resumeDate' in reg:
+        reg = reg.loc[reg.fillna(0).query('resumeDate==0 and rescheduleDate==0').index]
+    reg = reg.set_index('gamePk')
 
     # Split out the games that have been played vs those remaining
     played_col_mapper = {'teams.home.team.abbreviation': 'team1', 'teams.away.team.abbreviation': 'team2', 
                         'teams.home.score': 'score1', 'teams.away.score': 'score2'}
-    played = reg.dropna(subset=['isTie']).copy() # filter to include only completed/current games
-    played = played[played_col_mapper.keys()].rename(columns=played_col_mapper)
-    for col in ['score1', 'score2']:
-        played[col] = played[col].astype(int)
-    played['margin'] = played['score1']-played['score2']
-    played['W'] = np.where(played['margin']>0, played['team1'], played['team2'])
-    played['L']  = np.where(played['margin']<0, played['team1'], played['team2'])
+    remain_col_mapper = {'teams.home.team.abbreviation': 'team1', 'teams.away.team.abbreviation': 'team2'}
+    if 'isTie' in reg:
+        played = reg.dropna(subset=['isTie']).copy() # filter to include only completed/current games
+        played = played[played_col_mapper.keys()].rename(columns=played_col_mapper)
+        for col in ['score1', 'score2']:
+            played[col] = played[col].astype(int)
+        played['margin'] = played['score1']-played['score2']
+        played['W'] = np.where(played['margin']>0, played['team1'], played['team2'])
+        played['L']  = np.where(played['margin']<0, played['team1'], played['team2'])
 
-    remain_cols = {'teams.home.team.abbreviation': 'team1', 'teams.away.team.abbreviation': 'team2'}
-    remain = reg[~reg.index.isin(played.index)][remain_cols.keys()].rename(columns=remain_cols)
-
+        remain = reg[~reg.index.isin(played.index)][remain_col_mapper.keys()].rename(columns=remain_col_mapper)
+    else:
+        played = None
+        remain_col_mapper = {'teams.home.team.abbreviation': 'team1', 'teams.away.team.abbreviation': 'team2'}
+        remain = reg[remain_col_mapper.keys()].rename(columns=remain_col_mapper)
+    
     return (played, remain)
 
 
@@ -52,8 +59,16 @@ def __get_games_impl():
 # elo_vs_wpct.ipynb)
 def __get_ratings_impl():
     teams_resp = requests.get(TEAMS_URL, params | {'hydrate': 'standings'}).json()
+    
+    teams_df = pd.json_normalize(teams_resp['teams'])
+    teams_df = teams_df.rename(columns = {'abbreviation': 'team'}).set_index('team')
+    teams_df['rating'] = 1500
+    return teams_df['rating']
+
+    records = teams_df.rename(columns = {'abbreviation': 'team'}).set_index('team')
+
     records = pd.json_normalize(teams_resp['teams'], 
-                            record_path=['record', 'records', 'expectedRecords'], 
+                            record_path=['record', 'records'], #, 'expectedRecords'], 
                             meta=['abbreviation', ['record', 'wins'], ['record', 'losses']]).query('type=="xWinLoss"')
     records = records.rename(columns = {'abbreviation': 'team'}).set_index('team')
     comb_wins = records[['wins', 'record.wins']].mean(axis=1) # 'wins' is pythag wins
@@ -81,14 +96,18 @@ def __read_table_from_cache(filename_prefix, index_col):
 def __write_table_to_cache(df, filename_prefix):
     if not os.path.exists (__CACHE_DIR):
         os.makedirs(__CACHE_DIR)
-    df.reset_index().to_feather(f'{__CACHE_DIR}/{filename_prefix}.feather')
+    cache_file_path = f'{__CACHE_DIR}/{filename_prefix}.feather'
+    if df is not None:
+        df.reset_index().to_feather(cache_file_path)
+    elif os.path.exists(cache_file_path):
+        os.remove(cache_file_path)
 
 def __get_games_from_cache():
     played = __read_table_from_cache('cur', 'gamePk')
     remain = __read_table_from_cache('remain', 'gamePk')
     # This is a temporary workaround for when the season is completed
     # It pretends some games are still unplayed
-    if len(remain) == 0:
+    if remain is not None and len(remain) == 0:
         total_gms = len(played)
         played = played.head(total_gms-400)
         remain = played.tail(400)[['team1', 'team2']]

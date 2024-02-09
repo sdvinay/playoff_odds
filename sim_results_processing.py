@@ -7,7 +7,10 @@ import series_probs_approx as probs
 
 # Merge in league structure, and compute playoff seeding
 def process_sim_results(sim_results, played, league_structure, ratings):
-    cur_standings = sim_utils.compute_standings(played)
+    cur_standings = None
+    if played is not None and len(played) > 0:
+        cur_standings = sim_utils.compute_standings(played)
+
     standings = sim_utils.compute_standings_from_results(sim_results, cur_standings).reset_index()
     job_id = sim_results.iloc[0]['job_id']
     standings['job_id'] = job_id

@@ -13,14 +13,18 @@ def compute_standings(gms_played, groupby = []):
 
 
 def h2h_standings(games, teams):
-    return compute_standings(games.query('team1 in @teams and team2 in @teams'))
+    if games is not None:
+        return compute_standings(games.query('team1 in @teams and team2 in @teams'))
 
 
 def compute_standings_from_results(sim_results, incoming_standings):
-    sim_standings = compute_standings(sim_results, ['iter'])
+    sim_standings = compute_standings(sim_results, ['iter']).reset_index().set_index('team') 
 
-    incoming_standings['iter'] = 0 # so we can just add the 'iter' columns from the two tables to keep the one from the sim
-    full_standings = incoming_standings.reset_index().set_index('team') + sim_standings.reset_index().set_index('team')
+    if incoming_standings is not None and len(incoming_standings)>0:
+        incoming_standings['iter'] = 0 # so we can just add the 'iter' columns from the two tables to keep the one from the sim
+        full_standings = incoming_standings.reset_index().set_index('team') + sim_standings
+    else:
+        full_standings = sim_standings
 
     return full_standings
 
