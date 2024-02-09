@@ -29,7 +29,7 @@ def augment_summary(summary):
     # Get ratings for display purposes
     ratings = sim.ds.get_ratings()
     summary = pd.merge(left=summary, right=ratings.astype(int), left_index=True, right_index=True)
-    cols = ['rating', 'mean', 'max', 'min'] + [f'r{i}' for i in range(1, 7)] + ['div_wins', 'playoffs', 'lds_shares', 'lcs_shares', 'pennant_shares', 'p_home_game']
+    cols = ['rating', 'mean', 'max', 'min'] + [f'r{i}' for i in range(1, 7)] + ['div_wins', 'playoffs', 'lds_shares', 'lcs_shares', 'pennant_shares', 'ws_shares', 'p_home_game']
     return summary[cols].sort_values(['pennant_shares', 'mean'], ascending=False)
 
 def restructure_results(sim_results):
