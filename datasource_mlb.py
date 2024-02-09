@@ -52,35 +52,19 @@ def __get_games_impl():
     return (played, remain)
 
 
-# For the teams' quality ratings, take the mean of actual w% and pythag w%,
-# and regress by 35 wins and 35 losses (based on research I've done)
+# Pull rest-of-season and strength-of-schedule from FG to compute true talent
+# Map from FG abbreviations to MLB's
 # For compatibility with the rest of the system, return ratings on the ELO scale
 # by converting regressed w% to ELO (based on research I've done in
 # elo_vs_wpct.ipynb)
 def __get_ratings_impl():
-    teams_resp = requests.get(TEAMS_URL, params | {'hydrate': 'standings'}).json()
-    
-    teams_df = pd.json_normalize(teams_resp['teams'])
-    teams_df = teams_df.rename(columns = {'abbreviation': 'team'}).set_index('team')
-    teams_df['rating'] = 1500
-    return teams_df['rating']
-
-    records = teams_df.rename(columns = {'abbreviation': 'team'}).set_index('team')
-
-    records = pd.json_normalize(teams_resp['teams'], 
-                            record_path=['record', 'records'], #, 'expectedRecords'], 
-                            meta=['abbreviation', ['record', 'wins'], ['record', 'losses']]).query('type=="xWinLoss"')
-    records = records.rename(columns = {'abbreviation': 'team'}).set_index('team')
-    comb_wins = records[['wins', 'record.wins']].mean(axis=1) # 'wins' is pythag wins
-    g = records[['wins', 'losses']].sum(axis=1)
-    regressed_wpct = (comb_wins+35)/(g+70)
-    
-    # Go from regressed wpct to ELO
-    # ELO scales at 706*proj_wpct
-    # We'll center it at 1500, so add 1147
-    elo = regressed_wpct*706+1147
-    ratings = elo.rename('rating')
-    ratings.index.name = 'team'
+    url = 'https://www.fangraphs.com/api/playoff-odds/odds?dateDelta=&projectionMode=2&standingsType=mlb'
+    json_response = requests.get(url).json()
+    proj = pd.json_normalize(json_response, max_level=1)
+    df = proj[['abbName', 'endData.rosW', 'endData.sos']].rename(columns={'abbName': 'team'})
+    df = df.replace({'team': {'SDP': 'SD', 'SFG': 'SF', 'ARI': 'AZ', 'TBR': 'TB', 'CHW': 'CWS', 'WSN': 'WSH', 'KCR': 'KC'}}).set_index(['team'])
+    df['quality'] = df['endData.rosW'] + df['endData.sos'] - .5
+    ratings = (df['quality']*706+1147).rename('rating')
     return ratings
 
 
