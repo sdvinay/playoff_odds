@@ -46,7 +46,6 @@ def __get_games_impl():
         remain = reg[~reg.index.isin(played.index)][remain_col_mapper.keys()].rename(columns=remain_col_mapper)
     else:
         played = None
-        remain_col_mapper = {'teams.home.team.abbreviation': 'team1', 'teams.away.team.abbreviation': 'team2'}
         remain = reg[remain_col_mapper.keys()].rename(columns=remain_col_mapper)
     
     return (played, remain)
