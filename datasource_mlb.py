@@ -89,7 +89,7 @@ __get_ratings_impl = __get_ratings_fangraphs
 
 def __read_table_from_cache(filename_prefix, index_col):
     try:
-        df = pd.read_feather(f'{__CACHE_DIR}/{filename_prefix}.feather').set_index(index_col)
+        df = pd.read_csv(f'{__CACHE_DIR}/{filename_prefix}.csv').set_index(index_col)
     except FileNotFoundError:
         warnings.warn("mlbapi_cache files missing; run datasource_mlb::rebuild_cache() to rebuild", Warning)
         df = None
@@ -99,9 +99,9 @@ def __read_table_from_cache(filename_prefix, index_col):
 def __write_table_to_cache(df, filename_prefix):
     if not os.path.exists (__CACHE_DIR):
         os.makedirs(__CACHE_DIR)
-    cache_file_path = f'{__CACHE_DIR}/{filename_prefix}.feather'
+    cache_file_path = f'{__CACHE_DIR}/{filename_prefix}.csv'
     if df is not None:
-        df.reset_index().to_feather(cache_file_path)
+        df.to_csv(cache_file_path)
     elif os.path.exists(cache_file_path):
         os.remove(cache_file_path)
 
