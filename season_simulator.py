@@ -4,7 +4,7 @@ import typer
 import pandas as pd
 import numpy as np
 import series_probs_compute as probs
-import datasource_mlb as ds
+import datasource as ds
 import sim_utils
 import sim_results_processing
 import sim_output

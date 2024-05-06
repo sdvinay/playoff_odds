@@ -9,6 +9,7 @@ data/
 **/output/
 
 mlbapi_cache
+input_data
 
 # For local pip installs
 *.egg-info

@@ -1,4 +1,4 @@
-import datasource_mlb as ds
+import datasource as ds
 import sim_utils
 import random
 
