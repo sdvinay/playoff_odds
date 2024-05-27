@@ -1,5 +1,4 @@
 import concurrent.futures
-import time
 import pandas as pd
 import typer
 import random
@@ -11,22 +10,8 @@ from rich.progress import Progress, MofNCompleteColumn, TimeElapsedColumn
 import season_simulator as sim
 import summarize_results as sr
 import sim_output
+from perf_utils import print_perf_counter 
 
-
-def print_perf_counter(func):
-    '''
-    create a timing decorator function
-    use
-    @print_timing
-    just above the function you want to time
-    '''
-    def wrapper(*arg):
-        start = time.perf_counter()
-        result = func(*arg)
-        end = time.perf_counter()
-        print(f'{func.__name__} took {round(end-start, 2)} second(s)')
-        return result
-    return wrapper
 
 def sim_seasons(num_seasons: int, id: int, rating_variation_amt: int):
     sim.main(id = str(id), show_summary=False, num_seasons=num_seasons, rating_variation_amt = rating_variation_amt)
