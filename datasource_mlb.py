@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import warnings
 import os
 
+from perf_utils import print_perf_counter 
+
 SCHEDULE_URL = 'https://statsapi.mlb.com/api/v1/schedule'
 TEAMS_URL = 'https://statsapi.mlb.com/api/v1/teams'
 params = {'sportId': 1, 'season': 2024}
@@ -12,6 +14,7 @@ params = {'sportId': 1, 'season': 2024}
 __INPUT_DIR = 'input_data'
 
 
+@print_perf_counter
 def __get_games_impl():
     # Get the MLB schedule from the MLB stats API
     schedule_data = requests.get(SCHEDULE_URL, params | {'hydrate': 'team'}).json()
@@ -49,6 +52,7 @@ def __get_games_impl():
 # For compatibility with the rest of the system, return ratings on the ELO scale
 # by converting regressed w% to ELO (based on research I've done in
 # elo_vs_wpct.ipynb)
+@print_perf_counter
 def __get_ratings_mlb():
     teams_resp = requests.get(TEAMS_URL, params | {'hydrate': 'standings'}).json()
     records = pd.json_normalize(teams_resp['teams'], 
@@ -67,6 +71,7 @@ def __get_ratings_mlb():
     ratings.index.name = 'team'
     return ratings
 
+@print_perf_counter
 def __get_ratings_fangraphs():
     url = 'https://www.fangraphs.com/api/playoff-odds/odds?dateDelta=&projectionMode=2&standingsType=mlb'
     json_response = requests.get(url).json()
