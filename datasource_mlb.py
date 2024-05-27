@@ -43,7 +43,8 @@ def __get_games_impl():
     else:
         played = None
         remain = reg[remain_col_mapper.keys()].rename(columns=remain_col_mapper)
-    
+
+    print(f'Schedule updated: {len(played)} games played and {len(remain)} games remaining') 
     return (played, remain)
 
 
