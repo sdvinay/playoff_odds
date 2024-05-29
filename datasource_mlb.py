@@ -21,7 +21,7 @@ def __get_games_impl():
 
     # Remove the stubs of games that were rescheduled or suspended
     if 'resumeDate' in reg:
-        reg = reg.loc[reg.fillna(0).query('resumeDate==0 and rescheduleDate==0').index]
+        reg = reg.loc[reg.infer_objects().fillna(0).query('resumeDate==0 and rescheduleDate==0').index]
     reg = reg.set_index('gamePk')
 
     # Split out the games that have been played vs those remaining
