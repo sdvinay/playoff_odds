@@ -31,7 +31,7 @@ def augment_summary(summary):
     ratings = sim.ds.get_ratings()
     summary = pd.merge(left=summary, right=ratings.astype(int), left_index=True, right_index=True)
     cols = ['rating', 'mean', 'max', 'min'] + [f'r{i}' for i in range(1, 7)] + ['div_wins', 'playoffs', 'lds_shares', 'lcs_shares', 'pennant_shares', 'ws_shares', 'p_home_game']
-    return summary[cols].sort_values(['pennant_shares', 'mean'], ascending=False)
+    return summary[cols].sort_values(['ws_shares', 'mean'], ascending=False)
 
 def restructure_results(sim_results):
     wins = sim_results['W'].unstack(level='team')
