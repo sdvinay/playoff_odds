@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import requests
 import os
+import typer
 
 from perf_utils import print_perf_counter 
 
@@ -11,6 +12,7 @@ params = {'sportId': 1, 'season': 2024}
 
 __INPUT_DIR = 'input_data'
 
+app = typer.Typer(no_args_is_help=True)
 
 @print_perf_counter
 def __get_games_impl():
@@ -93,6 +95,7 @@ def __write_input_table(df, filename_prefix):
     elif os.path.exists(input_file_path):
         os.remove(input_file_path)
 
+@app.command()
 def update_input_data():
     cur, remain = __get_games_impl()
     ratings = __get_ratings_impl()
@@ -100,3 +103,11 @@ def update_input_data():
     __write_input_table(cur, 'cur')
     __write_input_table(remain, 'remain')
     __write_input_table(ratings, 'ratings')
+
+# this is a dummy; we need at least two Typer actions to avoid having a default behavior
+@app.callback()
+def callback():
+    pass
+
+if __name__ == "__main__":
+    app()
