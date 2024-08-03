@@ -36,13 +36,12 @@ def augment_summary(summary):
     standings = get_standings_for_display()
     summary = pd.merge(left=standings, right=summary, left_index=True, right_index=True)
     cols = ['W', 'L', 'GB', 'rating', 'mean', 'max', 'min'] + ['div_wins', 'byes', 'playoffs', 'lds_shares', 'lcs_shares', 'pennant_shares', 'ws_shares', 'p_home_game']
-    return summary[cols].sort_values(['ws_shares', 'mean'], ascending=False)
+    return summary.sort_values(by=['div', 'wpct'], ascending=[True, False])[cols]
 
 
 def get_standings_for_display():
     (cur, remain) = ds.get_games()
     standings = pd.merge(left=ds.league_structure, right=su.compute_standings(cur),left_index=True, right_index=True)
-    standings = standings.sort_values(by=['div', 'wpct'], ascending=[True, False])
     standings['over500'] = standings['W'] - standings['L']
 
     # compute GB
