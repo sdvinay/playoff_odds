@@ -46,7 +46,21 @@ def summarize_results(standings):
 
 
 def break_tie(tied_sets, sim_results, played):
-    return tied_sets.apply(lambda tms: tiebreakers.break_tie(tms))
+    def get_games(row):
+        cols = ['W', 'L']
+        run_id = row['run_id']
+        simmed = sim_results.query('run_id==@run_id')[cols]
+        games = pd.concat([played[cols], simmed])
+        return games
+
+    def break_one_tie(row):
+        games = get_games(row)
+        return tiebreakers.break_tie(row['team'])
+
+    tie_orders =  pd.Series(tied_sets.reset_index().apply(break_one_tie, axis=1)).rename('team')
+    tie_orders.index = tied_sets.index
+    return tie_orders
+
 
 def add_division_winners(standings, sim_results, played):
     standings['div_win'] = False
