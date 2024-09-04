@@ -14,7 +14,7 @@ def compute_standings(gms_played, groupby = []):
 
 def h2h_standings(games, teams):
     if games is not None:
-        return compute_standings(games.query('team1 in @teams and team2 in @teams'))
+        return compute_standings(games.query('W in @teams and L in @teams'))
 
 
 def compute_standings_from_results(sim_results, incoming_standings):
