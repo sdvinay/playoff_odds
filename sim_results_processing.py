@@ -55,8 +55,9 @@ def break_tie(tied_sets, sim_results, played):
 
     def break_one_tie(row):
         games = get_games(row)
-        return tiebreakers.break_tie(row['team'])
-
+        h2h = sim_utils.h2h_standings(games, row['team'])
+        return h2h.index
+    
     tie_orders =  pd.Series(tied_sets.reset_index().apply(break_one_tie, axis=1)).rename('team')
     tie_orders.index = tied_sets.index
     return tie_orders
