@@ -3,6 +3,7 @@ import tiebreakers
 import sim_utils
 import numpy as np
 import series_probs_approx as probs
+import functools
 
 # Merge in league structure, and compute playoff seeding
 def process_sim_results(sim_results, played, league_structure, ratings):
@@ -45,18 +46,17 @@ def summarize_results(standings):
     return summary.rename(columns={i: f'r{i}' for i in range(100)})
 
 
-def break_tie(tied_sets, sim_results, played):
-    def get_games(row):
+def break_all_ties(tied_sets, sim_results, played):
+    @functools.cache
+    def get_games(run_id):
         cols = ['W', 'L']
-        run_id = row['run_id']
-        simmed = sim_results.query('run_id==@run_id')[cols]
-        games = pd.concat([played[cols], simmed])
+        simmed = sim_results[sim_results['run_id']==run_id]
+        games = pd.concat([played[cols], simmed[cols]])
         return games
 
     def break_one_tie(row):
-        games = get_games(row)
-        h2h = sim_utils.h2h_standings(games, row['team'])
-        return h2h.index
+        games = get_games(row['run_id'])
+        return tiebreakers.break_tie(row['team'], games)
     
     tie_orders =  pd.Series(tied_sets.reset_index().apply(break_one_tie, axis=1)).rename('team')
     tie_orders.index = tied_sets.index
@@ -78,7 +78,7 @@ def add_division_winners(standings, sim_results, played):
     if len(tied_teams)>0:
         tied_sets = tied_teams.groupby(['run_id', 'div'])['team'].apply(set)
         # For each tied set, we just want the ['run_id', 'team'] of the winner, so we can set the div_win flag
-        tie_winners = break_tie(tied_sets, sim_results, played).apply(lambda s: s[0]).reset_index().set_index(['run_id', 'team']).index
+        tie_winners = break_all_ties(tied_sets, sim_results, played).apply(lambda s: s[0]).reset_index().set_index(['run_id', 'team']).index
         standings.loc[tie_winners, 'div_win'] = True
     return standings
 
@@ -87,7 +87,7 @@ def add_lg_ranks(standings, sim_results, played):
     tied_tm_ct = standings.groupby(['run_id', 'lg', 'wpct'])['wpct'].transform('size')
     if sum(tied_tm_ct) > 0:
         tied_sets = standings[tied_tm_ct>1].reset_index().groupby(['run_id', 'lg', 'wpct'])['team'].apply(set)
-        tie_orders = break_tie(tied_sets, sim_results, played).explode()
+        tie_orders = break_all_ties(tied_sets, sim_results, played).explode()
         # We need to take tie-orders (which are ordered lists) and convert them into a number we can use for sorting
         tiebreak = (15 - tie_orders.groupby(['run_id', 'lg', 'wpct']).cumcount())
         standings['tiebreak'] = pd.concat([tie_orders, tiebreak], axis=1).reset_index().set_index(['run_id', 'team'])[0]
