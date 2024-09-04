@@ -19,7 +19,6 @@ def process_sim_results(sim_results, played, league_structure, ratings):
     standings['job_id'] = job_id
 
     standings = sim_utils.add_run_ids(standings)
-    standings['wpct'] = standings['W'] / (standings['W'] + standings['L'])
 
     # Merge in the div/lg data
     standings = pd.merge(left=standings, right=league_structure, left_on='team', right_index=True)

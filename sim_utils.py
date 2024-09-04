@@ -23,6 +23,7 @@ def compute_standings_from_results(sim_results, incoming_standings):
     if incoming_standings is not None and len(incoming_standings)>0:
         incoming_standings['iter'] = 0 # so we can just add the 'iter' columns from the two tables to keep the one from the sim
         full_standings = incoming_standings.reset_index().set_index('team') + sim_standings
+        full_standings['wpct'] = full_standings['W'] / (full_standings['W'] + full_standings['L'])
     else:
         full_standings = sim_standings
 
