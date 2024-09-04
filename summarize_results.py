@@ -45,7 +45,7 @@ def get_standings_for_display():
     standings['over500'] = standings['W'] - standings['L']
 
     # compute GB
-    div_leaders = standings.groupby('div')['over500'].transform(max)
+    div_leaders = standings.groupby('div')['over500'].transform('max')
     standings['GB'] = (div_leaders - standings['over500'])/2
     return standings
     
