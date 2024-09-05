@@ -151,9 +151,10 @@ def add_ws_shares(standings):
     series_matchups = pd.merge(left=playoff_fields.query('lg=="N"'), right=playoff_fields.query('lg=="A"'), on=['run_id'], suffixes=['_N', '_A'])
     series_matchups.index.name = 'series_id' # Use the default RangeIndex, but give it a name
 
-    # Now break into one row per team, to merge in team data (['wpct', 'pennant_shares', 'lg', 'rating'])
-    teams = pd.merge(left=series_matchups[['team_N', 'team_A']].unstack().rename('team'), right=series_matchups['run_id'], on='series_id')
-    teams_full = pd.merge(left=teams.reset_index(), right=standings[['wpct', 'pennant_shares', 'lg', 'rating']], on=['team', 'run_id'])
+    # Now break into one row per team per matchup, to merge in team data (['wpct', 'pennant_shares', 'lg', 'rating'])
+    teams = pd.concat([series_matchups['team_N'].rename('team'), series_matchups['team_A'].rename('team')])
+    teams_full  = pd.merge(left=teams, right=series_matchups['run_id'], on='series_id') # merge in run_id
+    teams_full = pd.merge(left=teams_full.reset_index(), right=standings[['wpct', 'pennant_shares', 'lg', 'rating']], on=['team', 'run_id'])
 
     # Now back to one row per potential series
     all_ws = teams_full.set_index(['series_id', 'run_id', 'lg'])[['team', 'wpct', 'pennant_shares', 'rating']].unstack()
