@@ -2,10 +2,6 @@ import pandas as pd
 import tiebreakers
 import sim_utils
 import numpy as np
-from io import StringIO
-import series_probs_approx as probs
-import numpy as np
-from io import StringIO
 import series_probs_approx as probs
 
 # Merge in league structure, and compute playoff seeding
@@ -148,19 +144,27 @@ def add_series_shares(standings, likelihood_field_name, share_name, round_num):
 # Compute the likelihood of each possible matchup
 # Combine the last two steps to compute the likelihood of each team advancing beyond this round
 def add_ws_shares(standings):
-    cols = ['lg']
-    playoff_fields = standings.query('lg_rank<=6').rename(columns={'lg_rank': 'seed'}) [cols].reset_index()
+    # Just get the run_id, team and lg of every playoff team
+    playoff_fields = standings.query('lg_rank<=6')['lg'].reset_index()
 
+    # Enumerate all the possible WS matchups
     series_matchups = pd.merge(left=playoff_fields.query('lg=="N"'), right=playoff_fields.query('lg=="A"'), on=['run_id'], suffixes=['_N', '_A'])
-    series_matchups.index.name = 'series_id'
-    teams = pd.merge(left=series_matchups[['team_N', 'team_A']].unstack().rename('team'), right=series_matchups['run_id'], on='series_id')
+    series_matchups.index.name = 'series_id' # Use the default RangeIndex, but give it a name
 
+    # Now break into one row per team, to merge in team data (['wpct', 'pennant_shares', 'lg', 'rating'])
+    teams = pd.merge(left=series_matchups[['team_N', 'team_A']].unstack().rename('team'), right=series_matchups['run_id'], on='series_id')
     teams_full = pd.merge(left=teams.reset_index(), right=standings[['wpct', 'pennant_shares', 'lg', 'rating']], on=['team', 'run_id'])
+
+    # Now back to one row per potential series
     all_ws = teams_full.set_index(['series_id', 'run_id', 'lg'])[['team', 'wpct', 'pennant_shares', 'rating']].unstack()
 
+    # Compute the HFA for each matchup
     hfa = np.where(all_ws['wpct']['A'] > all_ws['wpct']['N'], 'A', 'N')
+
+    # Compute the likelihood of each matchup occurring 
     likelihood = all_ws['pennant_shares'].product(axis=1)
 
+    # Compute each team's w_prob in each potential matchup
     rating_home = pd.Series(np.where(hfa=="N", all_ws['rating']['N'], all_ws['rating']['A']))
     rating_away = pd.Series(np.where(hfa=="A", all_ws['rating']['N'], all_ws['rating']['A']))
     w_prob_h = probs.p_series(7, rating_home, rating_away)
@@ -168,10 +172,9 @@ def add_ws_shares(standings):
     all_ws[('series_win_prob', 'A')] = np.where(hfa=="A", w_prob_h, 1-w_prob_h)
     all_ws[('series_win_prob', 'N')] = np.where(hfa=="N", w_prob_h, 1-w_prob_h)
 
+    # Multiply each matchup's likelihood by each team's w_prob in that matchup, then sum by team
     ws_probs = all_ws['series_win_prob'].multiply(likelihood, axis=0)
-    pd.concat([ws_probs], axis=1, keys=['ws_probs'])
     all_ws = pd.concat([all_ws, pd.concat([ws_probs], axis=1, keys=['ws_probs'])], axis=1)
-
     ws_shares = all_ws.stack(future_stack=True).groupby(['run_id', 'team'])['ws_probs'].sum()
 
     standings['ws_shares'] = ws_shares
