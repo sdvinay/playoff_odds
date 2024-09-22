@@ -62,11 +62,11 @@ def break_tie(teams):
 
     # For three-way ties, per MLB rules (https://www.mlb.com/news/mlb-playoff-tiebreaker-rules)
     # First see if any team wins both two-way tie-breakers
-    # Then see if any team loses both two-way tie breakers TODO
+    # Then see if any team loses both two-way tie breakers
     if len(tms) == 3:
-        t01 = __clinched_tie_breakers.get(tuple((tms[0], tms[1])))
-        t02 = __clinched_tie_breakers.get(tuple((tms[0], tms[2])))
-        t12 = __clinched_tie_breakers.get(tuple((tms[1], tms[2])))
+        t01 = break_tie(tuple((tms[0], tms[1])), games)
+        t02 = break_tie(tuple((tms[0], tms[2])), games)
+        t12 = break_tie(tuple((tms[1], tms[2])), games)
 
         # First see if any team wins both two-way tie-breakers
         if t01 is not None and t02 is not None and t12 is not None:
@@ -77,12 +77,6 @@ def break_tie(teams):
                 tb = [tms[1]] + list(t02)
             elif t02[0] == t12[0]: # 2 has both h2hs
                 tb = [tms[2]] + list(t01)
-            else: # That means we have a cycle, so look at common h2h record
-                tb = __check_tie_breaker(tms)
-            
-            if tb is not None:
-                __add_tie_breaker(__clinched_tie_breakers, tb)
-                return tb
             
             # Now see if either team has lost both tie-breakers
             if t01[1] == t02[1]: # 0 has lost both h2hs
@@ -93,14 +87,41 @@ def break_tie(teams):
                 tb = list(t01) + [tms[2]]
             
             if tb is not None:
-                __add_tie_breaker(__clinched_tie_breakers, tb)
                 return tb
 
-    if len(tms) > 3:
-        tb = __check_tie_breaker(tms)
-        if tb is not None:
-            __add_tie_breaker(__clinched_tie_breakers, tb)
-            return tb
-    #print(f'Breaking tie randomly among {tms}')
-    return random.sample(tms, len(teams))
+    tie_breaker_funcs = [sim_utils.h2h_standings, 
+                         lambda g, t: sim_utils.intradivisional_records(g, t, ds.league_structure),
+                         lambda g, t: sim_utils.interdivisional_records(g, t, ds.league_structure)
+                         ]
+
+    # Recursively break ties of sub-groups
+    def process_group(grp):
+        if len(grp) == 1:
+            return list(grp)
+        else:
+            return list(break_tie(set(grp), games))
+    
+    ordering = None
+    for tb_func in tie_breaker_funcs:
+        tb_output = tb_func(games, teams).reset_index()
+        # If we have more than one unique value, then we don't need to iterate into further tie-breakers
+        if tb_output['wpct'].nunique() > 1:
+            # If any sub-groups of teams are still tied, we break the tie recursively
+            grps = tb_output.groupby('wpct')
+            if len(grps) == len(teams):
+                ordering = tb_output['team'].values
+            else:
+                # sum() will make a list from a list of lists
+                ordering = sum(grps['team'].apply(process_group).values, [])
+            break;
+    
+    if ordering is not None:
+        logger.info(f'broke tie among {teams} as {ordering} based on {tb_func}')
+        return ordering
+
+
+    # We have to return something when the tie is not broken
+    logger.warn(f"unbroken tie {teams}")
+    return random.shuffle(list(teams))
+
 
