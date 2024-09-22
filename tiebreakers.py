@@ -1,7 +1,7 @@
 import datasource as ds
-import sim_utils
 import random
 import logging
+import tiebreaker_impls
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='tiebreaker.log', level=logging.INFO)
@@ -12,7 +12,7 @@ logging.basicConfig(filename='tiebreaker.log', level=logging.INFO)
 # Does not consider intradvisional records
 def __check_tie_breaker(teams):
     cur, remain = ds.get_games()
-    h2h = sim_utils.h2h_standings(cur, teams)
+    h2h = tiebreaker_impls.h2h_standings(cur, teams)
     if h2h is not None and len(h2h) == 2:
         leader = h2h.iloc[0]
         gap = leader['W'] - leader['L']
@@ -55,7 +55,7 @@ def add_known_tie_breakers(tb):
 __clinched_tie_breakers = __find_all_clinched_tie_breakers()
 add_known_tie_breakers(__clinched_tie_breakers)
 
-def break_tie(teams):
+def break_tie(teams, games):
     tms = tuple(sorted(teams))
     if tms in __clinched_tie_breakers:
         return __clinched_tie_breakers[tms]
@@ -89,9 +89,9 @@ def break_tie(teams):
             if tb is not None:
                 return tb
 
-    tie_breaker_funcs = [sim_utils.h2h_standings, 
-                         lambda g, t: sim_utils.intradivisional_records(g, t, ds.league_structure),
-                         lambda g, t: sim_utils.interdivisional_records(g, t, ds.league_structure)
+    tie_breaker_funcs = [tiebreaker_impls.h2h_standings, 
+                         lambda g, t: tiebreaker_impls.intradivisional_records(g, t, ds.league_structure),
+                         lambda g, t: tiebreaker_impls.interdivisional_records(g, t, ds.league_structure)
                          ]
 
     # Recursively break ties of sub-groups
