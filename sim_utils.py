@@ -18,6 +18,23 @@ def h2h_standings(games, teams):
         return compute_standings(h2h_games)
 
 
+def intradivisional_records(games, teams, league_structure):
+    df = pd.merge(left=games, right=league_structure, left_on='W', right_index=True)
+    df = pd.merge(left=df, right=league_structure, left_on='L', right_index=True, suffixes=["_W", "_L"])
+    div_games = df.query('div_W==div_L')
+    standings = compute_standings(div_games)
+    return standings.query('team in @teams')
+
+
+# interdivisional: same league but different division
+def interdivisional_records(games, teams, league_structure):
+    df = pd.merge(left=games, right=league_structure, left_on='W', right_index=True)
+    df = pd.merge(left=df, right=league_structure, left_on='L', right_index=True, suffixes=["_W", "_L"])
+    interdiv_games = df.query('lg_W==lg_L and div_W!=div_L')
+    standings = compute_standings(interdiv_games)
+    return standings.query('team in @teams')
+
+
 def compute_standings_from_results(sim_results, incoming_standings):
     sim_standings = compute_standings(sim_results, ['iter']).reset_index().set_index('team') 
 
