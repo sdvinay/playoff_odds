@@ -9,13 +9,13 @@ import random
 def __check_tie_breaker(teams):
     cur, remain = ds.get_games()
     h2h = sim_utils.h2h_standings(cur, teams)
-    if h2h is not None and len(h2h) > 0:
+    if h2h is not None and len(h2h) == 2:
         leader = h2h.iloc[0]
         gap = leader['W'] - leader['L']
         num_remaining = len(remain.query('team1 in @teams and team2 in @teams'))
         # This checks if one team has a clinched a >.500 record in H2H games
         # This logic is only correct in a 2-way tie
-        # In a multi-way tie, this may yield a false positive (since multiple teams can finish >.500) TODO
+        # In a multi-way tie, this may yield a false positive (since multiple teams can finish >.500)
         if gap > num_remaining:
             return h2h.index.values
 
