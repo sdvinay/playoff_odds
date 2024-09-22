@@ -1,6 +1,10 @@
 import datasource as ds
 import sim_utils
 import random
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='tiebreaker.log', level=logging.INFO)
 
 # This checks whether a tie can definitively be broken among a set of teams
 # And if so, it returns the tie order. Returns None otherwise
