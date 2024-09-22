@@ -4,6 +4,7 @@ import sim_utils
 import numpy as np
 import series_probs_approx as probs
 import functools
+import datasource as ds
 
 # Merge in league structure, and compute playoff seeding
 def process_sim_results(sim_results, played, league_structure, ratings):
@@ -52,7 +53,10 @@ def break_all_ties(tied_sets, sim_results, played):
         cols = ['W', 'L']
         simmed = sim_results[sim_results['run_id']==run_id]
         games = pd.concat([played[cols], simmed[cols]])
-        return games
+        league_structure = ds.league_structure
+        df = pd.merge(left=games, right=league_structure, left_on='W', right_index=True)
+        df = pd.merge(left=df, right=league_structure, left_on='L', right_index=True, suffixes=["_W", "_L"])
+        return df
 
     def break_one_tie(row):
         games = get_games(row['run_id'])

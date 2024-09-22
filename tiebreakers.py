@@ -90,8 +90,8 @@ def break_tie(teams, games):
                 return tb
 
     tie_breaker_funcs = [tiebreaker_impls.h2h_standings, 
-                         lambda g, t: tiebreaker_impls.intradivisional_records(g, t, ds.league_structure),
-                         lambda g, t: tiebreaker_impls.interdivisional_records(g, t, ds.league_structure)
+                         tiebreaker_impls.intradivisional_records,
+                         tiebreaker_impls.interdivisional_records
                          ]
 
     # Recursively break ties of sub-groups
