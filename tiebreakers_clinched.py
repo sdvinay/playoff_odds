@@ -6,7 +6,7 @@ import tiebreaker_impls
 def __check_tie_breaker(teams):
     cur, remain = ds.get_games()
     h2h = tiebreaker_impls.h2h_standings(cur, teams)
-    if h2h is not None and len(teams) == 2:
+    if h2h is not None and len(h2h) > 0 and len(teams) == 2:
         leader = h2h.iloc[0]
         gap = leader['W'] - leader['L']
         num_remaining = len(remain.query('team1 in @teams and team2 in @teams'))

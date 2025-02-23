@@ -52,7 +52,7 @@ def break_all_ties(tied_sets, sim_results, played):
     def get_games(run_id):
         cols = ['W', 'L']
         simmed = sim_results[sim_results['run_id']==run_id]
-        games = pd.concat([played[cols], simmed[cols]])
+        games = pd.concat([played[cols], simmed[cols]]) if len(played)>0 else simmed[cols]
         league_structure = ds.league_structure
         df = pd.merge(left=games, right=league_structure, left_on='W', right_index=True)
         df = pd.merge(left=df, right=league_structure, left_on='L', right_index=True, suffixes=["_W", "_L"])
