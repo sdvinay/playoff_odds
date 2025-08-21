@@ -33,11 +33,11 @@ def break_tie(teams, games):
                 tb = [tms[2]] + list(t01)
             
             # Now see if either team has lost both tie-breakers
-            if t01[1] == t02[1]: # 0 has lost both h2hs
+            elif t01[1] == t02[1]: # 0 has lost both h2hs
                 tb = list(t12) + [tms[0]]
-            if t01[1] == t12[1]: # 1 has lost both h2hs
+            elif t01[1] == t12[1]: # 1 has lost both h2hs
                 tb = list(t02) + [tms[1]]
-            if t02[1] == t12[1]: # 2 has lost both h2hs
+            elif t02[1] == t12[1]: # 2 has lost both h2hs
                 tb = list(t01) + [tms[2]]
             
             if tb is not None:
@@ -75,8 +75,10 @@ def break_tie(teams, games):
         return ordering
 
 
-    # We have to return something when the tie is not broken
+    # We have to return something when the tie is not broken, so return a random ordering
     logger.warn(f"unbroken tie {teams}")
-    return random.shuffle(list(teams))
+    ordering = list(teams)
+    random.shuffle(ordering)
+    return ordering
 
 
