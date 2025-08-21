@@ -88,18 +88,20 @@ def add_division_winners(standings, sim_results, played):
 
 
 def add_lg_ranks(standings, sim_results, played):
-    tied_tm_ct = standings.groupby(['run_id', 'lg', 'wpct'])['wpct'].transform('size')
+    idx_cols = ['run_id', 'lg']
+    rank_cols = ['div_win', 'wpct']
+    tied_tm_ct = standings.groupby(idx_cols + rank_cols)['wpct'].transform('size')
     if sum(tied_tm_ct) > 0:
-        tied_sets = standings[tied_tm_ct>1].reset_index().groupby(['run_id', 'lg', 'wpct'])['team'].apply(set)
+        tied_sets = standings[tied_tm_ct>1].reset_index().groupby(idx_cols + rank_cols)['team'].apply(set)
         tie_orders = break_all_ties(tied_sets, sim_results, played).explode()
         # We need to take tie-orders (which are ordered lists) and convert them into a number we can use for sorting
-        tiebreak = (15 - tie_orders.groupby(['run_id', 'lg', 'wpct']).cumcount())
+        tiebreak = (15 - tie_orders.groupby(idx_cols + rank_cols).cumcount())
         standings['tiebreak'] = pd.concat([tie_orders, tiebreak], axis=1).reset_index().set_index(['run_id', 'team'])[0]
         standings.fillna({'tiebreak': 0}, inplace=True)
     else:
         standings['tiebreak'] = 0
 
-    standings['lg_rank'] = standings.sort_values(by=['div_win', 'wpct', 'tiebreak'], ascending=False).groupby(['run_id', 'lg']).cumcount()+1
+    standings['lg_rank'] = standings.sort_values(by=rank_cols+['tiebreak'], ascending=False).groupby(idx_cols).cumcount()+1
     return standings
 
 def add_p_home_game(standings):
