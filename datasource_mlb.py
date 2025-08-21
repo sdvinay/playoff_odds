@@ -8,7 +8,7 @@ from perf_utils import print_perf_counter
 
 SCHEDULE_URL = 'https://statsapi.mlb.com/api/v1/schedule'
 TEAMS_URL = 'https://statsapi.mlb.com/api/v1/teams'
-params = {'sportId': 1, 'season': 2024}
+params = {'sportId': 1, 'season': 2025}
 
 __INPUT_DIR = 'input_data'
 
