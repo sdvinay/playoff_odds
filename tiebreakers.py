@@ -4,7 +4,7 @@ import tiebreaker_impls
 import tiebreakers_clinched
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='tiebreaker.log', level=logging.INFO)
+logging.basicConfig(filename='logs/tiebreaker.log', level=logging.INFO)
 
 
 def break_tie(teams, games):
