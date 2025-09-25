@@ -7,7 +7,7 @@ def __get_league_structure_impl():
     div_text = '''
     NLW: AZ COL LAD SD SF
     NLE: ATL MIA NYM PHI WSH
-    ALW: SEA LAA HOU OAK TEX
+    ALW: SEA LAA HOU ATH TEX
     ALE: TB TOR BAL NYY BOS
     ALC: MIN CWS CLE KC DET
     NLC: STL MIL CHC PIT CIN
