@@ -41,7 +41,9 @@ def __get_games_impl():
 
         remain = reg[~reg.index.isin(played.index)][remain_col_mapper.keys()].rename(columns=remain_col_mapper)
     else:
-        played = None
+        played_cols = list(played_col_mapper.values()) + ['margin', 'W', 'L']
+        played = pd.DataFrame(columns=played_cols)
+        played.index.name = 'gamePk'
         remain = reg[remain_col_mapper.keys()].rename(columns=remain_col_mapper)
 
     print(f'Schedule updated: {len(played)} games played and {len(remain)} games remaining') 

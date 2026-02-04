@@ -34,7 +34,7 @@ def augment_summary(summary):
 
     # Get standings
     standings = get_standings_for_display()
-    summary = pd.merge(left=standings, right=summary, left_index=True, right_index=True)
+    summary = pd.concat([standings, summary], axis=1).fillna(0)
     cols = ['W', 'L', 'GB', 'rating', 'mean', 'max', 'min'] + ['div_wins', 'byes', 'playoffs', 'lds_shares', 'lcs_shares', 'pennant_shares', 'ws_shares', 'p_home_game']
     return summary.sort_values(by=['div', 'wpct'], ascending=[True, False])[cols]
 
