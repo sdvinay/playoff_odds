@@ -81,7 +81,10 @@ def __get_ratings_mlb(date: datetime):
 @print_perf_counter
 def __get_ratings_fangraphs(date: datetime):
     url = 'https://www.fangraphs.com/api/playoff-odds/odds?dateDelta=&projectionMode=2&standingsType=mlb'
-    json_response = requests.get(url).json()
+    params = {}
+    if date:
+        params['dateEnd'] = date.date()
+    json_response = requests.get(url, params).json()
     proj = pd.json_normalize(json_response, max_level=1)
     df = proj[['abbName', 'endData.rosW', 'endData.sos']].rename(columns={'abbName': 'team'})
     df = df.replace({'team': {'SDP': 'SD', 'SFG': 'SF', 'ARI': 'AZ', 'TBR': 'TB', 'CHW': 'CWS', 'WSN': 'WSH', 'KCR': 'KC'}}).set_index(['team'])
