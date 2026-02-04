@@ -3,21 +3,23 @@ import numpy as np
 import requests
 import os
 import typer
+from datetime import datetime
 
 from perf_utils import print_perf_counter 
 
 SCHEDULE_URL = 'https://statsapi.mlb.com/api/v1/schedule'
 TEAMS_URL = 'https://statsapi.mlb.com/api/v1/teams'
-params = {'sportId': 1, 'season': 2026}
+params = {'sportId': 1}
 
 __INPUT_DIR = 'input_data'
 
 app = typer.Typer(no_args_is_help=True)
 
 @print_perf_counter
-def __get_games_impl():
+def __get_games_impl(date: datetime):    
+    season = date.year if date else 2026
     # Get the MLB schedule from the MLB stats API
-    schedule_data = requests.get(SCHEDULE_URL, params | {'hydrate': 'team'}).json()
+    schedule_data = requests.get(SCHEDULE_URL, params | {'hydrate': 'team', 'season': season}).json()
     all_gms = pd.json_normalize(schedule_data['dates'], record_path=['games'])
     reg = all_gms.query('gameType=="R"')
 
@@ -32,6 +34,8 @@ def __get_games_impl():
     remain_col_mapper = {'teams.home.team.abbreviation': 'team1', 'teams.away.team.abbreviation': 'team2'}
     if 'isTie' in reg:
         played = reg.dropna(subset=['isTie']).copy() # filter to include only completed/current games
+        if date: # filter to games played before date
+            played = played[pd.to_datetime(played['officialDate']) < date]
         played = played[played_col_mapper.keys()].rename(columns=played_col_mapper)
         for col in ['score1', 'score2']:
             played[col] = played[col].astype(int)
@@ -46,7 +50,7 @@ def __get_games_impl():
         played.index.name = 'gamePk'
         remain = reg[remain_col_mapper.keys()].rename(columns=remain_col_mapper)
 
-    print(f'Schedule updated: {len(played)} games played and {len(remain)} games remaining') 
+    print(f'Schedule updated ({season}): {len(played)} games played and {len(remain)} games remaining') 
     return (played, remain)
 
 
@@ -56,7 +60,7 @@ def __get_games_impl():
 # by converting regressed w% to ELO (based on research I've done in
 # elo_vs_wpct.ipynb)
 @print_perf_counter
-def __get_ratings_mlb():
+def __get_ratings_mlb(date: datetime):
     teams_resp = requests.get(TEAMS_URL, params | {'hydrate': 'standings'}).json()
     records = pd.json_normalize(teams_resp['teams'], 
                             record_path=['record', 'records', 'expectedRecords'], 
@@ -75,7 +79,7 @@ def __get_ratings_mlb():
     return ratings
 
 @print_perf_counter
-def __get_ratings_fangraphs():
+def __get_ratings_fangraphs(date: datetime):
     url = 'https://www.fangraphs.com/api/playoff-odds/odds?dateDelta=&projectionMode=2&standingsType=mlb'
     json_response = requests.get(url).json()
     proj = pd.json_normalize(json_response, max_level=1)
@@ -98,9 +102,9 @@ def __write_input_table(df, filename_prefix):
         os.remove(input_file_path)
 
 @app.command()
-def update_input_data():
-    cur, remain = __get_games_impl()
-    ratings = __get_ratings_impl()
+def update_input_data(date: datetime = None):
+    cur, remain = __get_games_impl(date)
+    ratings = __get_ratings_impl(date)
 
     __write_input_table(cur, 'cur')
     __write_input_table(remain, 'remain')
